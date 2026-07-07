@@ -1,3 +1,14 @@
+## Portfolio roadmap
+
+This repo is the portfolio site (project P7). All work here is driven by the roadmap:
+**Entry point:** `~/.claude/instructions/projects/roadmap-master.md` → portfolio tasks live in
+`~/.claude/instructions/projects/portfolio-roadmap.md`. Read those before working; follow the
+operator rules there (one task at a time, verify acceptance criteria, update the progress log).
+Locked site copy (positioning, bio, one-liners) is in section 1 of the portfolio roadmap.
+
+- Live: https://cansinbayir.com (custom domain) · fallback https://cansinba.github.io/portfolio/
+- Deploy: push to `main` → GitHub Actions (`.github/workflows/deploy.yml`) builds & publishes.
+
 ## Development
 
 When starting the dev server, use background mode:
