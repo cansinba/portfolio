@@ -1,0 +1,48 @@
+---
+const positioning =
+  'UI/UX designer and front-end developer. I design in Figma, build in React, and use an AI pipeline to keep the two in sync. I also draw on my backend development experience along the way.';
+---
+
+<html lang="en">
+	<head>
+		<meta charset="utf-8" />
+		<link rel="icon" type="image/svg+xml" href="/favicon.svg" />
+		<meta name="viewport" content="width=device-width, initial-scale=1" />
+		<meta name="generator" content={Astro.generator} />
+		<title>Cansın Bayır — UI/UX &amp; Front-End</title>
+		<meta name="description" content={positioning} />
+	</head>
+	<body>
+		<main>
+			<p class="tag">Portfolio · coming soon</p>
+			<h1>Cansın Bayır</h1>
+			<p class="lead">{positioning}</p>
+		</main>
+		<style>
+			:root { color-scheme: light dark; }
+			* { margin: 0; box-sizing: border-box; }
+			body {
+				font: 16px/1.6 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+				min-height: 100dvh;
+				display: grid;
+				place-items: center;
+				padding: 2rem;
+				background: #fafafa;
+				color: #18181b;
+			}
+			@media (prefers-color-scheme: dark) {
+				body { background: #0a0a0a; color: #fafafa; }
+			}
+			main { max-width: 34rem; }
+			.tag {
+				text-transform: uppercase;
+				letter-spacing: 0.12em;
+				font-size: 0.72rem;
+				opacity: 0.55;
+				margin-bottom: 1rem;
+			}
+			h1 { font-size: clamp(2rem, 6vw, 3rem); letter-spacing: -0.02em; margin-bottom: 1rem; }
+			.lead { font-size: 1.1rem; opacity: 0.85; }
+		</style>
+	</body>
+</html>
