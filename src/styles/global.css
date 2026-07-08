@@ -1,0 +1,99 @@
+/* ------------------------------------------------------------------
+   Global foundations — a light token layer for the portfolio site.
+   Basalt UI (project P3) will later formalize these; keep names stable
+   so they can be reconciled with the design system.
+------------------------------------------------------------------- */
+
+:root {
+  color-scheme: light dark;
+
+  /* Type — system stack for now; a real typeface can replace this later */
+  --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica,
+    Arial, sans-serif;
+  --font-mono: ui-monospace, "SF Mono", "JetBrains Mono", Menlo, monospace;
+
+  /* Type scale (fluid where it matters) */
+  --step--1: 0.833rem;
+  --step-0: 1rem; /* 16px base */
+  --step-1: 1.2rem;
+  --step-2: clamp(1.35rem, 1.1rem + 1.1vw, 1.75rem);
+  --step-3: clamp(1.7rem, 1.3rem + 1.8vw, 2.4rem);
+  --step-4: clamp(2.1rem, 1.5rem + 3vw, 3.4rem);
+
+  --leading-body: 1.65;
+  --leading-tight: 1.15;
+
+  /* Spacing — 8pt rhythm */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --space-12: 3rem;
+  --space-16: 4rem;
+  --space-24: 6rem;
+
+  /* Measure — readable prose line length */
+  --measure: 68ch;
+
+  --radius: 10px;
+  --radius-sm: 6px;
+
+  /* Light theme (default) */
+  --bg: #fbfbfa;
+  --surface: #ffffff;
+  --text: #1a1a19;
+  --text-muted: #6b6b68;
+  --border: #e7e6e3;
+  --accent: #2f5be0;
+  --accent-contrast: #ffffff;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --bg: #0c0c0d;
+    --surface: #161617;
+    --text: #f2f2f0;
+    --text-muted: #9a9a97;
+    --border: #2a2a2b;
+    --accent: #7a9bff;
+    --accent-contrast: #0c0c0d;
+  }
+}
+
+/* Explicit theme override (a future toggle stamps data-theme on :root) */
+:root[data-theme="light"] {
+  --bg: #fbfbfa; --surface: #ffffff; --text: #1a1a19; --text-muted: #6b6b68;
+  --border: #e7e6e3; --accent: #2f5be0; --accent-contrast: #ffffff;
+}
+:root[data-theme="dark"] {
+  --bg: #0c0c0d; --surface: #161617; --text: #f2f2f0; --text-muted: #9a9a97;
+  --border: #2a2a2b; --accent: #7a9bff; --accent-contrast: #0c0c0d;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+* { margin: 0; }
+
+html { -webkit-text-size-adjust: 100%; }
+
+body {
+  font-family: var(--font-sans);
+  font-size: var(--step-0);
+  line-height: var(--leading-body);
+  color: var(--text);
+  background: var(--bg);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+}
+
+h1, h2, h3 { line-height: var(--leading-tight); letter-spacing: -0.02em; font-weight: 650; }
+
+a { color: var(--accent); text-underline-offset: 2px; }
+a:focus-visible, button:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+  border-radius: 3px;
+}
+
+img { max-width: 100%; height: auto; display: block; }

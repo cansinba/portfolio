@@ -1,0 +1,107 @@
+---
+import CaseStudy from "../../layouts/CaseStudy.astro";
+import Compare from "../../components/Compare.astro";
+import Figure from "../../components/Figure.astro";
+---
+
+<CaseStudy
+  eyebrow="Template preview · Dummy content"
+  title="Sample Case Study"
+  outcome="This page exists to prove the case-study template renders end to end — every real project drops into this same structure."
+  role="Design & front-end"
+  timeline="Template · Day 2"
+  tools={["Astro", "Figma", "React"]}
+  liveUrl="https://cansinbayir.com"
+  figmaUrl="https://figma.com"
+  repoUrl="https://github.com/cansinba/portfolio"
+>
+  <h2>Problem &amp; constraints</h2>
+  <p>
+    Every case study on this site follows one fixed structure so a hiring manager
+    can scan any project the same way. This is placeholder prose sized to show the
+    reading measure — the line length should sit between 60 and 75 characters, which
+    is the comfortable range for sustained reading. If a line runs much wider than
+    this, the eye loses its place returning to the next line.
+  </p>
+  <p>
+    The constraint that shapes everything here: a reader gives a portfolio maybe
+    three minutes. The template has to make the outcome legible immediately, then
+    reward anyone who keeps reading with the reasoning behind it.
+  </p>
+
+  <h2>Process</h2>
+  <p>
+    The body of a case study walks through how the work was made. It carries at least
+    one image or artifact roughly every 150 words so the page never becomes a wall of
+    text. Here is a standard figure with a caption:
+  </p>
+
+  <Figure
+    src="/assets/sample/design.svg"
+    alt="Placeholder design mockup"
+    caption="A standard figure sits at the prose width with a muted caption underneath."
+  />
+
+  <h3>The pipeline</h3>
+  <p>
+    Every project shows one direction of the Figma↔code workflow. This is the
+    signature artifact — two panels, labelled, so the match between the design and the
+    shipped implementation is something you can see rather than a claim you have to
+    trust.
+  </p>
+
+  <Compare
+    figmaSrc="/assets/sample/design.svg"
+    codeSrc="/assets/sample/build.svg"
+    figmaAlt="Placeholder Figma design"
+    codeAlt="Placeholder shipped code"
+    direction="figma-to-code"
+    caption="Figma design (left) and the shipped React implementation (right) — same layout, same spacing."
+  />
+
+  <h2>Key decisions</h2>
+  <p>Three decisions, each paired with the alternative that was rejected and why.</p>
+
+  <div class="decision">
+    <h3>1 — One fixed template over per-project layouts</h3>
+    <p>
+      A single structure makes the whole portfolio scannable and keeps publishing fast:
+      new project, fill the slots, ship.
+    </p>
+    <p class="rejected">
+      <strong>Rejected:</strong> bespoke layouts per project — more expressive, but slow
+      to build and inconsistent to read across seven case studies.
+    </p>
+  </div>
+
+  <div class="decision">
+    <h3>2 — Show the pipeline, don't describe it</h3>
+    <p>
+      The side-by-side comparison component turns the core claim into visible evidence
+      on every project page.
+    </p>
+    <p class="rejected">
+      <strong>Rejected:</strong> a paragraph explaining the workflow — easy to skip, easy
+      to doubt.
+    </p>
+  </div>
+
+  <div class="decision">
+    <h3>3 — System fonts and inline SVG for speed</h3>
+    <p>
+      Keeping the page dependency-light protects the Lighthouse budget and loads instantly
+      on a throttled connection.
+    </p>
+    <p class="rejected">
+      <strong>Rejected:</strong> a heavy web-font pairing up front — better typography, but a
+      cost to pay only once the design is settled.
+    </p>
+  </div>
+
+  <h2>Outcome &amp; what's next</h2>
+  <p>
+    The template renders at <code>/work/sample</code>, stays readable on mobile, and gives
+    every future project a prepared slot to drop into. Next: replace this dummy content with
+    the first real project (Basalt UI) and its captured pipeline artifact.
+  </p>
+</CaseStudy>

@@ -1,0 +1,41 @@
+---
+interface Props {
+  src: string;
+  alt: string;
+  caption?: string;
+  /** bleed = wider than the prose measure, for full-width imagery */
+  bleed?: boolean;
+}
+const { src, alt, caption, bleed = false } = Astro.props;
+---
+
+<figure class:list={["figure", { bleed }]}>
+  <img src={src} alt={alt} loading="lazy" />
+  {caption && <figcaption>{caption}</figcaption>}
+</figure>
+
+<style>
+  .figure {
+    margin-block: var(--space-8);
+  }
+  .figure img {
+    width: 100%;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--surface);
+  }
+  figcaption {
+    margin-top: var(--space-3);
+    font-size: var(--step--1);
+    color: var(--text-muted);
+    line-height: 1.5;
+  }
+  /* Bleed beyond the prose measure on wider screens */
+  .bleed {
+    width: min(100%, 60rem);
+    margin-inline: calc((var(--measure) - min(100%, 60rem)) / 2);
+  }
+  @media (max-width: 48rem) {
+    .bleed { width: 100%; margin-inline: 0; }
+  }
+</style>
