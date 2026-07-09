@@ -5,7 +5,7 @@ Full measured notes live in the paper notebook / weekly Figma files — this is 
 searchable trail so the weekly review can confirm the habit is unbroken.
 
 Format: `YYYY-MM-DD | Teardown / Copy-work / Weekly | source (+ [Figma] link for copy-work) | one-line takeaway`
-Figma work lives in **Design Eye — Month N** files, one page per week, pages named `W<week>D<day> · <type> · <source>`.
+Figma work lives in **Design Eye — Month N** files, pages named `W<week>D<day>_<type>_<source>` (e.g. `W1D2_copy-work_linear.app/pricing Basic`, `W1D3_teardown_stripe.com`).
 
 ## Week 1 — Seeing & deconstruction (Jul 7–13)
 
