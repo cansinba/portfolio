@@ -1,0 +1,857 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>period. — not a question mark. From 37 voices to a shipped design — UX Case Study</title>
+<meta name="description" content="End-to-end UX case study: survey research on period tracking apps translated into a full product design — design system, 18 screens, working React Native prototype.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600&family=Space+Mono:wght@400;700&family=Jaro&family=Nunito:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  /* ─── TOKENS ─────────────────────────────────────────────── */
+  :root{
+    /* editorial (page) palette */
+    --ink:#1c141b;
+    --paper:#fbfbfa;
+    --paper-deep:#efeeeb;
+    --plum:#5a2742;
+    --plum-deep:#37172b;
+    --clay:#bd6a5a;
+    --mute:#867b8f;
+    --line:rgba(28,20,27,.11);
+    --bar-bg:rgba(90,39,66,.09);
+    --maxw:980px;
+    /* product (app) palette — shown as content in §02 */
+    --app-bg:#f4f2fb;
+    --app-primary:#3b21e3;
+    --app-period:#e8736e;
+    --app-text:#222730;
+    --app-dim:#9aa5b1;
+    --ph-follicular:#a78bfa;
+    --ph-ovulation:#fb7185;
+    --ph-luteal:#818cf8;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html{scroll-behavior:smooth}
+  body{
+    background:var(--paper);
+    color:var(--ink);
+    font-family:'Inter',system-ui,sans-serif;
+    font-size:17px;
+    line-height:1.65;
+    -webkit-font-smoothing:antialiased;
+    overflow-x:hidden;
+  }
+  img{max-width:100%;display:block}
+  .wrap{max-width:var(--maxw);margin:0 auto;padding:0 28px}
+  .mono{font-family:'Space Mono',monospace}
+  .eyebrow{
+    font-family:'Space Mono',monospace;
+    font-size:12px;
+    letter-spacing:.18em;
+    text-transform:uppercase;
+    color:var(--clay);
+  }
+
+  /* ─── TOP BAR ────────────────────────────────────────────── */
+  .topbar{
+    border-bottom:1px solid var(--line);
+    position:sticky;top:0;z-index:50;
+    background:rgba(251,251,250,.85);
+    backdrop-filter:blur(8px);
+  }
+  .topbar .wrap{display:flex;justify-content:space-between;align-items:center;padding-top:16px;padding-bottom:16px;gap:16px}
+  .topbar .name{font-family:'Fraunces',serif;font-weight:600;font-size:16px;letter-spacing:-.01em}
+  .topbar .meta{font-family:'Space Mono',monospace;font-size:11.5px;color:var(--mute);letter-spacing:.04em}
+  @media(max-width:560px){.topbar .meta{display:none}}
+
+  /* ─── HERO ───────────────────────────────────────────────── */
+  .hero{padding:88px 0 64px;position:relative;background:linear-gradient(180deg,var(--paper-deep) 0%,var(--paper) 78%)}
+  .hero .wrap{position:relative;z-index:2}
+  .hero h1{
+    font-family:'Fraunces',serif;
+    font-weight:500;
+    font-size:clamp(40px,7vw,76px);
+    line-height:1.02;
+    letter-spacing:-.025em;
+    margin:22px 0 26px;
+    max-width:16ch;
+  }
+  .hero h1 em{font-style:italic;color:var(--plum)}
+  .hero .lede{font-size:clamp(18px,2.4vw,21px);color:var(--ink);max-width:48ch;opacity:.9}
+  .method{
+    margin-top:54px;
+    display:flex;flex-wrap:wrap;gap:0;
+    border:1px solid var(--line);
+    border-radius:2px;
+    overflow:hidden;
+  }
+  .method div{
+    flex:1;min-width:140px;
+    padding:18px 22px;
+    border-right:1px solid var(--line);
+  }
+  .method div:last-child{border-right:none}
+  .method .k{font-family:'Space Mono',monospace;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--mute);margin-bottom:6px}
+  .method .v{font-family:'Fraunces',serif;font-size:22px;font-weight:500}
+  @media(max-width:560px){.method div{flex:1 1 50%;border-bottom:1px solid var(--line)}.method div:nth-child(2n){border-right:none}}
+
+  /* ─── SECTION SCAFFOLD ───────────────────────────────────── */
+  section.block{padding:62px 0;border-top:1px solid var(--line)}
+  .secnum{font-family:'Space Mono',monospace;font-size:12px;color:var(--clay);letter-spacing:.1em;margin-bottom:14px}
+  h2{
+    font-family:'Fraunces',serif;
+    font-weight:500;
+    font-size:clamp(27px,4vw,40px);
+    line-height:1.1;
+    letter-spacing:-.02em;
+    max-width:22ch;
+    margin-bottom:20px;
+  }
+  h2 em{font-style:italic;color:var(--plum)}
+  p.body{max-width:62ch;margin-bottom:18px;color:#2c2128}
+  p.body strong{font-weight:600;color:var(--ink)}
+
+  /* ─── FINDING CARDS ──────────────────────────────────────── */
+  .find-tag{
+    font-family:'Space Mono',monospace;font-size:12px;
+    color:#fff;background:var(--plum);
+    padding:3px 9px;border-radius:2px;white-space:nowrap;
+    align-self:flex-start;
+  }
+  .fcards{display:grid;grid-template-columns:1fr 1fr;gap:18px;margin:30px 0 8px}
+  .fcard{border:1px solid var(--line);border-radius:3px;background:#fff;padding:24px;display:flex;flex-direction:column;gap:12px}
+  .fcard .big{font-family:'Fraunces',serif;font-weight:500;font-size:54px;line-height:.95;letter-spacing:-.03em;color:var(--plum)}
+  .fcard .big span{font-size:26px;color:var(--mute)}
+  .fcard h3{font-family:'Fraunces',serif;font-weight:500;font-size:19px;line-height:1.3;letter-spacing:-.01em}
+  .fcard .note{font-size:13.5px;color:var(--mute);line-height:1.5;margin-top:auto;font-style:italic}
+  .methodline{font-family:'Space Mono',monospace;font-size:11.5px;color:var(--mute);letter-spacing:.03em;max-width:none}
+  @media(max-width:640px){.fcards{grid-template-columns:1fr}}
+
+  /* ─── BAR CHART ──────────────────────────────────────────── */
+  .chart{margin:26px 0 8px;max-width:640px}
+  .row{margin-bottom:13px}
+  .row .lab{display:flex;justify-content:space-between;font-size:14px;margin-bottom:5px}
+  .row .lab .n{font-family:'Space Mono',monospace;color:var(--mute);font-size:12.5px}
+  .track{height:11px;background:var(--bar-bg);border-radius:6px;overflow:hidden}
+  .fill{height:100%;background:var(--plum);border-radius:6px;width:0;transition:width 1.1s cubic-bezier(.2,.7,.2,1)}
+  .row.hi .fill{background:var(--clay)}
+  .chart .cap{font-family:'Space Mono',monospace;font-size:11.5px;color:var(--mute);margin-top:12px;letter-spacing:.03em}
+
+  /* ─── STAT CALLOUTS ──────────────────────────────────────── */
+  .stats{display:flex;flex-wrap:wrap;gap:18px;margin:30px 0 8px}
+  .stat{
+    flex:1;min-width:200px;
+    border:1px solid var(--line);border-radius:3px;
+    padding:26px 24px;background:#fff;
+  }
+  .stat .big{font-family:'Fraunces',serif;font-weight:500;font-size:54px;line-height:.95;letter-spacing:-.03em;color:var(--plum)}
+  .stat .big span{font-size:26px;color:var(--mute)}
+  .stat .desc{margin-top:12px;font-size:14.5px;line-height:1.45;color:#2c2128}
+
+  /* ─── QUOTES ─────────────────────────────────────────────── */
+  .quote{
+    border-left:3px solid var(--clay);
+    padding:6px 0 6px 22px;
+    margin:28px 0;
+    max-width:60ch;
+  }
+  .quote p{font-family:'Fraunces',serif;font-style:italic;font-size:19px;line-height:1.45;color:var(--plum-deep)}
+  .quote cite{display:block;font-family:'Space Mono',monospace;font-style:normal;font-size:12px;color:var(--mute);margin-top:10px;letter-spacing:.04em}
+
+  /* ─── SPLIT PANEL ────────────────────────────────────────── */
+  .split{display:grid;grid-template-columns:1fr 1fr;gap:0;border:1px solid var(--line);border-radius:3px;overflow:hidden;margin-top:28px}
+  .split>div{padding:26px 24px}
+  .split>div:first-child{border-right:1px solid var(--line);background:#fff}
+  .split .lbl{font-family:'Space Mono',monospace;font-size:11px;letter-spacing:.12em;text-transform:uppercase;color:var(--mute);margin-bottom:10px}
+  .split .pt{font-family:'Fraunces',serif;font-size:20px;line-height:1.25;letter-spacing:-.01em}
+  @media(max-width:560px){.split{grid-template-columns:1fr}.split>div:first-child{border-right:none;border-bottom:1px solid var(--line)}}
+
+  /* ─── FINDING → DECISION MAP ─────────────────────────────── */
+  .map{margin-top:30px;border:1px solid var(--line);border-radius:3px;overflow:hidden}
+  .map .mrow{display:grid;grid-template-columns:1fr 34px 1fr;align-items:stretch;border-bottom:1px solid var(--line);background:#fff}
+  .map .mrow:last-child{border-bottom:none}
+  .map .cell{padding:22px 24px}
+  .map .cell .lbl{font-family:'Space Mono',monospace;font-size:10.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--mute);margin-bottom:8px}
+  .map .cell.res .lbl{color:var(--clay)}
+  .map .cell p{font-size:15px;line-height:1.5;color:#2c2128}
+  .map .cell p strong{font-weight:600;color:var(--ink)}
+  .map .arr{display:flex;align-items:center;justify-content:center;color:var(--clay)}
+  .map .arr svg{width:16px;height:16px}
+  .map .cell.des{background:rgba(90,39,66,.035)}
+  @media(max-width:680px){
+    .map .mrow{grid-template-columns:1fr}
+    .map .arr{display:none}
+    .map .cell.des{border-top:1px dashed var(--line)}
+  }
+
+  /* ─── DESIGN LANGUAGE ────────────────────────────────────── */
+  .swatches{display:grid;grid-template-columns:repeat(auto-fit,minmax(150px,1fr));gap:14px;margin:30px 0 10px}
+  .sw{border:1px solid var(--line);border-radius:3px;overflow:hidden;background:#fff}
+  .sw .chip{height:84px}
+  .sw .info{padding:12px 14px}
+  .sw .nm{font-size:13.5px;font-weight:600}
+  .sw .hx{font-family:'Space Mono',monospace;font-size:11.5px;color:var(--mute);margin-top:2px}
+
+  .typerow{display:grid;grid-template-columns:1fr 1fr 1fr;gap:14px;margin:26px 0 10px}
+  .type{border:1px solid var(--line);border-radius:3px;background:#fff;padding:22px 22px 18px}
+  .type .sample{font-size:44px;line-height:1.05;color:var(--app-text);margin-bottom:12px;min-height:96px;display:flex;align-items:flex-end}
+  .type.jaro .sample{font-family:'Jaro',sans-serif;color:var(--app-primary)}
+  .type.nunito .sample{font-family:'Nunito',sans-serif}
+  .type.inter .sample{font-family:'Inter',sans-serif;font-variant-numeric:tabular-nums}
+  .type .nm{font-family:'Space Mono',monospace;font-size:11px;letter-spacing:.1em;text-transform:uppercase;color:var(--mute)}
+  .type .role{font-size:13.5px;margin-top:4px;color:#2c2128}
+  @media(max-width:680px){.typerow{grid-template-columns:1fr}}
+
+  /* ─── PHONES / SCREENS ───────────────────────────────────── */
+  .feature{display:grid;grid-template-columns:1fr 1fr;gap:48px;align-items:center;margin-top:64px}
+  .feature.rev-order .txt{order:2}
+  .feature.rev-order .media{order:1}
+  .feature h3{font-family:'Fraunces',serif;font-weight:500;font-size:clamp(22px,3vw,30px);line-height:1.15;letter-spacing:-.015em;margin-bottom:14px}
+  .feature h3 em{font-style:italic;color:var(--plum)}
+  .feature p{font-size:15.5px;line-height:1.6;color:#2c2128;max-width:44ch;margin-bottom:12px}
+  .feature .tags{display:flex;flex-wrap:wrap;gap:8px;margin-top:16px}
+  .feature .tag{font-family:'Space Mono',monospace;font-size:11px;letter-spacing:.06em;color:var(--plum);background:var(--bar-bg);padding:5px 10px;border-radius:2px}
+  .prod-h{font-family:'Fraunces',serif;font-weight:500;font-size:clamp(22px,3vw,30px);line-height:1.15;letter-spacing:-.015em;margin:56px 0 14px}
+  .prod-h em{font-style:italic;color:var(--plum)}
+  @media(max-width:760px){
+    .feature{grid-template-columns:1fr;gap:26px}
+    .feature.rev-order .txt{order:1}
+    .feature.rev-order .media{order:2}
+  }
+
+  .phone{
+    border:1px solid rgba(28,20,27,.16);
+    border-radius:34px;
+    overflow:hidden;
+    background:var(--app-bg);
+    box-shadow:0 24px 60px -28px rgba(55,23,43,.35);
+    max-width:340px;
+    margin:0 auto;
+  }
+  .phone.vp{aspect-ratio:390/844}
+  .phone .scr{height:100%;overflow-y:auto;scrollbar-width:none}
+  .phone .scr::-webkit-scrollbar{display:none}
+  .phone img{width:100%;height:auto}
+  .phone-cap{font-family:'Space Mono',monospace;font-size:11px;color:var(--mute);text-align:center;margin-top:12px;letter-spacing:.05em}
+  .phone .scr.live{overflow:hidden;position:relative}
+  .phone .scr.live iframe{position:absolute;top:0;left:0;width:390px;height:844px;border:0;transform-origin:top left}
+
+  .duo{display:grid;grid-template-columns:1fr 1fr;gap:26px}
+  .duo .phone{max-width:300px}
+  @media(max-width:560px){.duo{grid-template-columns:1fr}}
+
+  .trio{display:grid;grid-template-columns:repeat(3,1fr);gap:26px;margin-top:44px}
+  .trio .phone{max-width:none}
+  @media(max-width:760px){.trio{grid-template-columns:1fr;max-width:340px;margin-left:auto;margin-right:auto}}
+
+  /* ─── ONBOARDING STRIP ───────────────────────────────────── */
+  .strip-wrap{margin-top:36px;overflow:hidden}
+  .strip{
+    display:flex;gap:22px;
+    overflow-x:auto;
+    scroll-snap-type:x mandatory;
+    padding:8px 4px 22px;
+    scrollbar-width:none;
+  }
+  .strip::-webkit-scrollbar{display:none}
+  .strip .cell{flex:0 0 216px;scroll-snap-align:start}
+  .strip .phone{max-width:216px;border-radius:24px}
+  .strip .cap{font-family:'Space Mono',monospace;font-size:10.5px;color:var(--mute);margin-top:10px;text-align:center;letter-spacing:.04em}
+  .strip-hint{font-family:'Space Mono',monospace;font-size:11px;color:var(--mute);letter-spacing:.05em;display:flex;align-items:center;gap:8px;margin-top:2px}
+  .strip-hint svg{width:14px;height:14px;flex:none}
+
+  /* ─── REFLECTION ─────────────────────────────────────────── */
+  .refl{display:grid;grid-template-columns:1fr 1fr;gap:30px;margin-top:18px}
+  @media(max-width:640px){.refl{grid-template-columns:1fr;gap:8px}}
+  .refl h4{font-family:'Space Mono',monospace;font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--clay);margin-bottom:12px}
+  .refl p{font-size:15px;color:#2c2128;line-height:1.6;max-width:46ch}
+
+  /* ─── FOOTER ─────────────────────────────────────────────── */
+  footer{border-top:1px solid var(--line);padding:46px 0 60px;margin-top:20px;background:linear-gradient(180deg,var(--paper) 0%,var(--paper-deep) 100%)}
+  footer .wrap{display:flex;justify-content:space-between;flex-wrap:wrap;gap:18px;align-items:flex-end}
+  footer .big{font-family:'Fraunces',serif;font-size:26px;font-weight:500;letter-spacing:-.02em;max-width:26ch;line-height:1.2}
+  footer .meta{font-family:'Space Mono',monospace;font-size:11.5px;color:var(--mute);letter-spacing:.04em;text-align:right}
+
+  /* ─── SCROLLY — HOME, ANNOTATED (§03) ────────────────────── */
+  .sc-track{height:660vh}
+  .sc-stage{
+    position:sticky;top:70px;
+    height:calc(100vh - 70px);
+    display:grid;grid-template-columns:1fr auto 1fr;gap:36px;
+    align-items:center;
+  }
+  .sc-phone-wrap{width:min(300px,calc((100vh - 210px)*390/844))}
+  .sc-phone-wrap .phone{position:relative;max-width:none;width:100%}
+  .sc-overlay{position:absolute;inset:0;width:100%;height:100%;pointer-events:none;z-index:2;transition:opacity .5s ease}
+  .sc-stage.is-intro .sc-overlay{opacity:0}
+  .sc-scrollcue{display:flex;align-items:center;justify-content:flex-end;gap:10px;margin-top:18px;color:var(--clay)}
+  .sc-scrollcue span{font-family:'Space Mono',monospace;font-size:11px;letter-spacing:.14em}
+  .sc-scrollcue svg{width:16px;height:16px;animation:sc-bounce 1.3s ease-in-out infinite}
+  @keyframes sc-bounce{0%,100%{transform:translateY(0)}50%{transform:translateY(7px)}}
+  .sc-cut,.sc-rim{
+    transition:x .55s cubic-bezier(.4,0,.2,1),y .55s cubic-bezier(.4,0,.2,1),
+      width .55s cubic-bezier(.4,0,.2,1),height .55s cubic-bezier(.4,0,.2,1),
+      opacity .4s ease;
+  }
+  .sc-rim{
+    stroke:#fff;stroke-width:2;fill:none;
+    filter:drop-shadow(0 0 9px rgba(59,33,227,.7)) drop-shadow(0 0 2px rgba(255,255,255,.9));
+  }
+  .sc-col{display:grid;align-self:center}
+  .sc-col>.sc-step{grid-area:1/1}
+  .sc-step{
+    opacity:0;transform:translateY(16px);
+    transition:opacity .45s ease,transform .45s ease;
+    pointer-events:none;max-width:30ch;
+  }
+  .sc-step.on{opacity:1;transform:none;pointer-events:auto}
+  .sc-col-rat .sc-step{text-align:right;justify-self:end}
+  .sc-col-res .sc-step{justify-self:start}
+  .sc-eyebrow{font-family:'Space Mono',monospace;font-size:11px;letter-spacing:.14em;text-transform:uppercase;color:var(--clay);margin-bottom:10px}
+  .sc-step .find-tag{display:inline-block;margin-bottom:10px}
+  .sc-h{font-family:'Fraunces',serif;font-weight:500;font-size:clamp(20px,2.6vw,26px);line-height:1.2;letter-spacing:-.015em;margin-bottom:10px}
+  .sc-h em{font-style:italic;color:var(--plum)}
+  .sc-p{font-size:15px;line-height:1.6;color:#2c2128}
+  .sc-quote{font-family:'Fraunces',serif;font-style:italic;font-size:16.5px;line-height:1.5;color:var(--plum-deep);margin-top:12px}
+  .sc-src{font-family:'Space Mono',monospace;font-size:11px;color:var(--mute);margin-top:10px;letter-spacing:.05em}
+  .sc-dots{display:flex;justify-content:center;gap:8px;margin-top:14px}
+  .sc-dots span{width:7px;height:7px;border-radius:50%;background:rgba(90,39,66,.18);transition:background .3s ease,transform .3s ease}
+  .sc-dots span.on{background:var(--clay);transform:scale(1.3)}
+  @media(max-width:760px){
+    .sc-track{height:636vh}
+    .sc-stage{grid-template-columns:1fr;gap:16px;align-items:start;align-content:start;justify-items:center;padding-top:6px}
+    .sc-phone-wrap{order:-1;grid-row:1;width:min(170px,calc(36vh*390/844))}
+    .sc-col-rat,.sc-col-res{grid-row:2;grid-column:1}
+    .sc-phone-wrap .phone-cap{display:none}
+    .sc-dots{margin-top:10px}
+    .sc-col{width:100%}
+    .sc-step{max-width:none}
+    .sc-col-rat .sc-step{text-align:left;justify-self:start}
+    .sc-scrollcue{justify-content:flex-start}
+    .sc-h{font-size:19px}
+    .sc-p{font-size:14px}
+    .sc-quote{font-size:14.5px;margin-top:8px}
+  }
+
+  /* ─── SCROLLY — FINDING F ────────────────────────────────── */
+  .fs-track{height:350vh}
+  .fs-stage{
+    position:sticky;top:86px;width:100%;
+    transition:width .65s cubic-bezier(.4,0,.2,1),margin .65s cubic-bezier(.4,0,.2,1);
+  }
+  .fs-stage.open{width:calc(200% + 18px);margin-left:calc(-100% - 18px)}
+  .fs-hero{
+    border:1.5px solid var(--clay);background:rgba(189,106,90,.05);
+    border-radius:3px;padding:24px;width:100%;text-align:center;
+    display:flex;flex-direction:column;align-items:center;justify-content:center;
+    min-height:var(--mate-h,0);
+    transition:min-height .65s cubic-bezier(.4,0,.2,1);
+  }
+  .fs-q{font-family:'Fraunces',serif;font-weight:500;font-size:19px;line-height:1.3;letter-spacing:-.015em;transition:font-size .55s cubic-bezier(.4,0,.2,1)}
+  .fs-q em{font-style:italic;color:var(--plum)}
+  .fs-stage.open .fs-q{font-size:clamp(24px,3vw,32px)}
+  .fs-stage.open .fs-hero{min-height:calc(100vh - 106px)}
+  .fs-body{display:grid;width:100%;max-width:640px;margin:0 auto;max-height:0;overflow:hidden;opacity:0;transition:max-height .65s cubic-bezier(.4,0,.2,1),opacity .5s ease .15s,margin .65s ease}
+  .fs-stage.open .fs-body{max-height:60vh;opacity:1;margin-top:24px}
+  .fs-step{grid-area:1/1;opacity:0;transform:translateY(14px);transition:opacity .45s ease,transform .45s ease;text-align:center;pointer-events:none}
+  .fs-step.on{opacity:1;transform:none;pointer-events:auto}
+  .fs-step .sc-p{font-size:16px}
+  @media(max-width:760px){
+    .fs-track{height:330vh}
+    .fs-hero{padding:24px 20px}
+    .fs-q{font-size:18px}
+    .fs-stage.open .fs-q{font-size:22px}
+    .fs-step .sc-p{font-size:14.5px}
+  }
+  @media(max-width:640px){
+    .fs-stage.open{width:100%;margin-left:0}
+  }
+
+  /* ─── REVEAL ─────────────────────────────────────────────── */
+  .rev{opacity:0;transform:translateY(18px);transition:opacity .7s ease,transform .7s ease}
+  .rev.in{opacity:1;transform:none}
+  @media(prefers-reduced-motion:reduce){
+    .rev{opacity:1;transform:none;transition:none}
+    .fill{transition:none}
+    .sc-cut,.sc-rim,.sc-step,.sc-dots span{transition:none}
+    .sc-overlay{transition:none}
+    .sc-scrollcue svg{animation:none}
+    .fs-hero,.fs-q,.fs-body,.fs-step,.fs-stage{transition:none}
+    html{scroll-behavior:auto}
+  }
+</style>
+</head>
+<body>
+
+<div class="topbar">
+  <div class="wrap">
+    <div class="name">period. — not a question mark.</div>
+    <div class="meta">RESEARCH → DESIGN&nbsp;&nbsp;/&nbsp;&nbsp;SELF-INITIATED&nbsp;&nbsp;/&nbsp;&nbsp;2025–26</div>
+  </div>
+</div>
+
+<header class="hero">
+  <div class="wrap">
+    <div class="eyebrow">An end-to-end case study — survey to shipped screens</div>
+    <h1>A survey of what 37 people <em>couldn't find</em> in period apps.</h1>
+    <p class="lede">I ran two surveys on cycle tracking — one in Turkish, one in English; 37 people answered. What came out were four findings about the gap between what these apps promise and what people can actually find in them. This page tells the findings first, then the design that grew out of them. So — what's missing?</p>
+
+    <div class="method">
+      <div><div class="k">Method</div><div class="v">2 surveys + desk research</div></div>
+      <div><div class="k">Respondents</div><div class="v">37</div></div>
+      <div><div class="k">Screens designed</div><div class="v">18</div></div>
+      <div><div class="k">Built as</div><div class="v">Working app prototype</div></div>
+    </div>
+  </div>
+</header>
+
+<!-- ══════════════ PART I — RESEARCH ══════════════ -->
+
+<section class="block">
+  <div class="wrap rev">
+    <div class="secnum">01 — THE FINDINGS</div>
+    <h2>The <em>five things</em> people can't find</h2>
+    <p class="body methodline">2 SURVEYS (TR + EN) · 37 RESPONDENTS (24 AGED 25–34 · 12 WITH PCOS) · GOAL: SHARP SIGNALS, NOT STATISTICS</p>
+
+    <div class="fcards">
+      <div class="fcard"><span class="find-tag">FINDING A</span><div class="big">29<span>/37</span></div><h3>The one ask: a calendar that's right about when. The two most-repeated words in open answers: accuracy and simplicity.</h3><div class="note">“I want to track my period, it shouldn’t be rocket science complicated.” — respondent, verbatim</div></div>
+      <div class="fcard"><span class="find-tag">FINDING B</span><div class="big">#1</div><h3>The most-used tool isn't a period app — it's Apple / Samsung Health. The data says why: easy to use (7 of 8), accurate, free — and the feeling that “it's enough.”</h3><div class="note">“I used many different apps, premium and freemium, in the end I chose simplicity and started to use apple health, it’s enough” — respondent, verbatim</div><div class="note" style="margin-top:0">5 of 8 Health users flagged “too many features / complicated” — versus a third of the overall sample. They're not choosing the built-in; they're fleeing to it.</div></div>
+      <div class="fcard"><span class="find-tag">FINDING C</span><div class="big">30<span>/37</span></div><h3>Would never pay; for 23/37, constant premium prompts are a delete trigger.</h3><div class="note">“It sometimes does not allow me to close the upgrade add. I was at a point to delete it.” — respondent, verbatim</div></div>
+      <div class="fcard"><span class="find-tag">FINDING D</span><div class="big">19<span>/37</span></div><h3>The strongest trust signal: “let me use it without an account.”</h3><div class="note">Not a quote — a count: the most-selected option in the surveys' multiple-choice trust question (19/37).</div></div>
+      <div class="fcard" style="align-self:start"><span class="find-tag">FINDING E</span><div class="big">Top 3</div><h3>“Too pink, too childish” design is one of the top-3 frustrations.</h3><div class="note">Design matters to them — most rated it 4–5 out of 5 — yet they reject the look they're given. Considered, not bubblegum.</div></div>
+    <div class="fs-track" id="fsTrack">
+      <div class="fs-stage">
+        <div class="fs-hero">
+          <h3 class="fs-q">And those who aren't menstruating — or whose cycles are irregular — <em>how do they track?</em></h3>
+          <div class="fs-body">
+          <div class="fs-step" data-fs="1">
+            <div class="sc-eyebrow">Step 1 · The dead end</div>
+            <p class="sc-p">My own surveys couldn't answer it. They only reached people who menstruate and track — and the nearest signal, “partner sharing,” was the least-wanted feature of all: <strong>1 of 37</strong>.</p>
+          </div>
+          <div class="fs-step" data-fs="2">
+            <div class="sc-eyebrow">Step 2 · Where the answers live</div>
+            <p class="sc-p">So I went where the un-surveyed users already complain in the open: <strong>app-store and Trustpilot reviews, plus peer-reviewed HCI research.</strong> In a 2025 study of 132 users, <strong>41% of dissatisfaction</strong> traced to variable cycle length alone — and 4 of 11 in my Turkish survey had flagged the same problem.</p>
+          </div>
+          <div class="fs-step" data-fs="3">
+            <div class="sc-eyebrow">Step 3 · It has a name</div>
+            <p class="sc-p">The literature calls it the <em>“cycle regularity imperative”</em> — apps flag a swinging cycle as “irregular,” and users read that as “unhealthy.”</p>
+            <p class="sc-quote">“Even if they tried to predict my cycle taking PCOS into account, they were always off by at least 10 days.”</p>
+            <div class="sc-src">PCOS USER · HCI RESEARCH (TILBURG, 2025)</div>
+          </div>
+          <div class="fs-step" data-fs="4">
+            <div class="sc-eyebrow">Step 4 · The crowded gap</div>
+            <p class="sc-p"><strong>Clue</strong> already ships a no-period tracking mode; <strong>Balance</strong> and <strong>Caria</strong> serve menopause; <strong>Euki</strong>, <strong>Drip</strong> and <strong>Spot On</strong> serve trans and non-binary users — while people keep settling back into the built-in Health app. The gap is real, but it isn't empty.</p>
+          </div>
+          </div>
+        </div>
+      </div>
+    </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ══════════════ PART II — FROM FINDINGS TO PRODUCT ══════════════ -->
+
+<section class="block">
+  <div class="wrap rev">
+    <div class="secnum">02 — DESIGN LANGUAGE</div>
+    <h2>A period app that refuses to <em>whisper</em></h2>
+    <p class="body">The brand starts with a sentence, not a logo: <strong>“period. — not a question mark.”</strong> Set in Jaro — a compressed, almost stubborn display face — in signal red, it reads as a statement of fact. The rest of the interface deliberately calms down around it: soft lavender surfaces, glass-like cards, one decisive indigo for every action.</p>
+
+    <div class="swatches">
+      <div class="sw"><div class="chip" style="background:#f4f2fb;border-bottom:1px solid var(--line)"></div><div class="info"><div class="nm">Background</div><div class="hx">#F4F2FB</div></div></div>
+      <div class="sw"><div class="chip" style="background:#3b21e3"></div><div class="info"><div class="nm">Primary</div><div class="hx">#3B21E3</div></div></div>
+      <div class="sw"><div class="chip" style="background:#e8736e"></div><div class="info"><div class="nm">Period / Menstrual</div><div class="hx">#E8736E</div></div></div>
+      <div class="sw"><div class="chip" style="background:#a78bfa"></div><div class="info"><div class="nm">Follicular</div><div class="hx">#A78BFA</div></div></div>
+      <div class="sw"><div class="chip" style="background:#fb7185"></div><div class="info"><div class="nm">Ovulation</div><div class="hx">#FB7185</div></div></div>
+      <div class="sw"><div class="chip" style="background:#818cf8"></div><div class="info"><div class="nm">Luteal</div><div class="hx">#818CF8</div></div></div>
+      <div class="sw"><div class="chip" style="background:#222730"></div><div class="info"><div class="nm">Text</div><div class="hx">#222730</div></div></div>
+      <div class="sw"><div class="chip" style="background:#9aa5b1"></div><div class="info"><div class="nm">Text dim</div><div class="hx">#9AA5B1</div></div></div>
+    </div>
+
+    <div class="typerow">
+      <div class="type jaro">
+        <div class="sample">Check-in</div>
+        <div class="nm">Jaro — display</div>
+        <div class="role">Headings, numbers, anything that should feel certain.</div>
+      </div>
+      <div class="type nunito">
+        <div class="sample">How are you feeling today?</div>
+        <div class="nm">Nunito — body</div>
+        <div class="role">Copy, hints, labels — rounded and unclinical.</div>
+      </div>
+      <div class="type inter">
+        <div class="sample">28 days</div>
+        <div class="nm">Inter — data</div>
+        <div class="role">Values and stats, tabular where it counts.</div>
+      </div>
+    </div>
+
+    <p class="body" style="margin-top:14px">Every value lives as a token — colors, spacing, radii, type — mirrored 1:1 between the code (<span class="mono" style="font-size:14px">src/theme</span>) and a Figma variable library, so the prototype and the design file can't drift apart.</p>
+  </div>
+</section>
+
+<!-- ══════════════ PART III — THE PRODUCT ══════════════ -->
+
+<section class="block">
+  <div class="wrap rev">
+    <div class="secnum">03 — THE PRODUCT</div>
+    <h2>Eighteen screens, each one <em>answering a finding</em></h2>
+
+    <h3 class="prod-h">Onboarding: eight screens to <em>earn trust</em></h3>
+    <p class="body">The flow opens with the brand statement, then asks only what changes the product: how your period behaves (Regular / Irregular / No period — the mode decision from the research, asked as the <em>second question</em>), relevant conditions like PCOS or endometriosis, last period, duration, hormone therapy. Every step is skippable — “I don't know” and “prefer not to say” are real options, not dark-pattern fine print. And the final screen offers <strong>“continue without account”</strong> alongside sign-up — a quieter link below the card, but a genuine path into the app.</p>
+
+    <div class="strip-wrap">
+      <div class="strip" aria-label="Onboarding flow screens">
+        <div class="cell"><div class="phone"><img src="case-study-assets/onb-0-welcome.png" alt="Welcome screen — period. not a question mark. brand statement with hormone wave illustration and Start button" loading="lazy"></div><div class="cap">0 · WELCOME</div></div>
+        <div class="cell"><div class="phone"><img src="case-study-assets/onb-1-period.png" alt="Onboarding — How's your period? Regular, Irregular or No period options" loading="lazy"></div><div class="cap">1 · HOW'S YOUR PERIOD?</div></div>
+        <div class="cell"><div class="phone"><img src="case-study-assets/onb-2a-conditions.png" alt="Onboarding — Any medical conditions? PCOS, endometriosis, PMDD and more, with I don't know option" loading="lazy"></div><div class="cap">2 · CONDITIONS</div></div>
+        <div class="cell"><div class="phone"><img src="case-study-assets/onb-2b-lastperiod.png" alt="Onboarding — When was your last period? Month, year and arc day picker" loading="lazy"></div><div class="cap">3 · LAST PERIOD</div></div>
+        <div class="cell"><div class="phone"><img src="case-study-assets/onb-3-duration.png" alt="Onboarding — How long does your period usually last? Slider with glass thumb" loading="lazy"></div><div class="cap">4 · DURATION</div></div>
+        <div class="cell"><div class="phone"><img src="case-study-assets/onb-4-hormone.png" alt="Onboarding — Are you on hormone therapy? Yes, No, or prefer not to say" loading="lazy"></div><div class="cap">5 · HORMONE THERAPY</div></div>
+        <div class="cell"><div class="phone"><img src="case-study-assets/onb-5a-signup.png" alt="Onboarding — sign up card with Apple and Google options and continue without account link" loading="lazy"></div><div class="cap">6 · SIGN UP — OR DON'T</div></div>
+        <div class="cell"><div class="phone"><img src="case-study-assets/onb-5b-login.png" alt="Onboarding — log in variant of the auth card" loading="lazy"></div><div class="cap">6b · LOG IN</div></div>
+      </div>
+      <div class="strip-hint" aria-hidden="true">
+        <svg viewBox="0 0 16 16" fill="none"><path d="M2 8h11M9 3l5 5-5 5" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+        DRAG TO WALK THE FLOW
+      </div>
+    </div>
+
+    <h3 class="prod-h">Home: one screen, five decisions — <em>scroll to walk through them</em></h3>
+    <p class="body">Keep scrolling: the home screen stays put while each element lights up, with the finding it answers right beside it.</p>
+  </div>
+
+  <div class="wrap">
+    <div class="sc-track" id="scTrack">
+      <div class="sc-stage is-intro">
+        <div class="sc-col sc-col-rat">
+          <div class="sc-step on" data-step="0">
+            <div class="sc-eyebrow">Start here</div>
+            <h3 class="sc-h">This is the <em>home screen</em></h3>
+            <p class="sc-p">Everything 37 people asked for, on a single screen — no tabs, no digging. Keep scrolling: each element lights up in turn, tagged with the finding it answers.</p>
+            <div class="sc-scrollcue" aria-hidden="true"><span>SCROLL</span><svg viewBox="0 0 16 16" fill="none"><path d="M3 6l5 5 5-5" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+          </div>
+          <div class="sc-step" data-step="1">
+            <div class="sc-eyebrow">Step 1 / 5</div>
+            <span class="find-tag">FINDING A</span>
+            <h3 class="sc-h">The answer <em>before the question</em></h3>
+            <p class="sc-p">The very first pixel is the status pill — Day 4 · Menstrual, date underneath. No dashboard to parse, no tab to hunt: where you are in your cycle is already on screen the moment the app opens. And it's honest: <strong>the pill only appears once you've logged data and a pattern has formed</strong> — the app never fakes a prediction it can't back.</p>
+          </div>
+          <div class="sc-step" data-step="3">
+            <div class="sc-eyebrow">Step 3 / 5</div>
+            <span class="find-tag">FINDINGS C + F</span>
+            <h3 class="sc-h">The premium feature, free — and <em>different for everyone</em></h3>
+            <p class="sc-p">The hormone curves paid apps lock behind subscriptions sit here as a free Insights card. And this is where Finding F lands: for irregular cycles, no periods, hormone therapy and perimenopause the pattern runs in <strong>different modes</strong> — everyone reads their own cycle.</p>
+          </div>
+          <div class="sc-step" data-step="5">
+            <div class="sc-eyebrow">Step 5 / 5</div>
+            <span class="find-tag">FINDINGS C + D</span>
+            <h3 class="sc-h">Below the fold <em>of attention</em></h3>
+            <p class="sc-p">Blog and Meditate close the screen: reachable, never in the way. Articles on PCOS and cycle health, a player that breathes — no feed, no streak shaming, no engagement bait.</p>
+          </div>
+        </div>
+        <div class="sc-phone-wrap">
+          <div class="phone vp">
+            <div class="scr"><img src="case-study-assets/home.png" alt="Home screen — Day 4 Menstrual phase pill, Hello greeting, Check-in card at 0%, Cycle Pattern insights card, phase tip bar, Blog and Meditate cards" style="object-fit:cover"></div>
+            <svg class="sc-overlay" viewBox="0 0 390 844" preserveAspectRatio="none" aria-hidden="true">
+              <defs>
+                <mask id="scMask">
+                  <rect width="390" height="844" fill="#fff"/>
+                  <rect class="sc-cut" id="scCut0" x="117" y="43" width="160" height="35" rx="18" fill="#000"/>
+                  <rect class="sc-cut" id="scCut1" x="117" y="43" width="160" height="35" rx="18" fill="#000" style="opacity:0"/>
+                </mask>
+              </defs>
+              <rect width="390" height="844" fill="rgba(15,10,30,.55)" mask="url(#scMask)"/>
+              <rect class="sc-rim" id="scRim0" x="117" y="43" width="160" height="35" rx="18"/>
+              <rect class="sc-rim" id="scRim1" x="117" y="43" width="160" height="35" rx="18" style="opacity:0"/>
+            </svg>
+          </div>
+          <div class="sc-dots" aria-hidden="true"><span></span><span></span><span></span><span></span><span></span></div>
+          <div class="phone-cap">HOME — EVERY ELEMENT ANSWERS A FINDING</div>
+        </div>
+        <div class="sc-col sc-col-res">
+          <div class="sc-step" data-step="2">
+            <div class="sc-eyebrow">Step 2 / 5</div>
+            <span class="find-tag">FINDING B</span>
+            <h3 class="sc-h">Logging, one thumb away — <em>twice</em></h3>
+            <p class="sc-p">The Check-in card carries a <strong>progress bar</strong> — a deliberate choice: a half-filled bar creates the feeling of something almost complete, and that <strong>pull to finish nudges users to log more</strong> — every extra entry is exactly the data an accurate prediction needs. <strong>Fill the bar and the card celebrates you</strong> — “All logged ✦”. The same action repeats bottom-right as “Log today” and ＋, inside thumb reach.</p>
+          </div>
+          <div class="sc-step" data-step="4">
+            <div class="sc-eyebrow">Step 4 / 5</div>
+            <span class="find-tag">FINDINGS E + F</span>
+            <h3 class="sc-h">Advice that knows <em>what day it is</em></h3>
+            <p class="sc-p">The tip bar tints itself with the current phase and rewrites daily — rest and iron-rich food during menstruation, energy later. And the tips <strong>change with the mode</strong> too: no period or on hormone therapy, the guidance follows your situation. Never a verdict, never a guilt trip.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <div class="wrap rev">
+
+    <div class="feature rev-order">
+      <div class="txt">
+        <h3>Logging that takes <em>30 seconds, not 30 taps</em></h3>
+        <p>The check-in is five rows of pills — feel, blood, pain, craving, symptoms. Every option is one tap, thumb-sized (44&nbsp;pt), no free text required. A date arc at the top swipes like a wheel; the selected day sits in a glass ring.</p>
+        <p>The Done button climbs from “Done” to “Superstar!” as you log — the only gamification in the app, and it costs nothing.</p>
+        <div class="tags"><span class="tag">beat the built-in</span><span class="tag">zero typing</span></div>
+      </div>
+      <div class="media">
+        <div class="duo">
+          <div>
+            <div class="phone vp"><div class="scr"><img src="case-study-assets/caldaily.png" alt="Daily log screen — arc date picker with selected day in a glass ring, five quick-log pill rows, anonymous share card" loading="lazy"></div></div>
+            <div class="phone-cap">DAILY LOG</div>
+          </div>
+          <div>
+            <div class="phone vp"><div class="scr"><img src="case-study-assets/add.png" alt="Add entry screen — How's today header with Done button, date arc, quick-log pills, anonymous share and private journal fields" loading="lazy"></div></div>
+            <div class="phone-cap">QUICK ADD + JOURNAL</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="feature">
+      <div class="txt">
+        <h3>A calendar that predicts <em>without judging</em></h3>
+        <p>The month view paints the predicted period as a soft coral band and tints the rest of the month by phase — follicular, ovulation, luteal. Logged days carry a tiny progress ring under the date.</p>
+        <p>What it never does: flag a late or irregular cycle as “abnormal.” That single pattern — the <em>cycle regularity imperative</em> — was the most documented anxiety in the research.</p>
+        <div class="tags"><span class="tag">hypothesis → mode</span><span class="tag">no guilt UI</span></div>
+      </div>
+      <div class="media">
+        <div class="phone"><img src="case-study-assets/calmonthly.png" alt="Monthly calendar — predicted period shown as soft coral band across days 20 to 24, phase-tinted cells, legend, selected day panel with Add log button" loading="lazy"></div>
+        <div class="phone-cap">MONTHLY VIEW — PREDICTION AS A BAND, NOT A VERDICT</div>
+      </div>
+    </div>
+
+    <div class="feature rev-order">
+      <div class="txt">
+        <h3>The premium feature, <em>free on purpose</em></h3>
+        <p>Hormone analytics is what paid apps lock behind subscriptions — and 30 of 37 people said they'd never pay. So the Pattern screen ships it free: four hormone curves across a 28-day loop, draggable, with the current day pinned.</p>
+        <p>Below it, “You're not alone” — anonymous one-line notes from others on the same cycle day. Community without profiles, feeds or follower counts.</p>
+        <div class="tags"><span class="tag">value, not paywall</span><span class="tag">anonymous by design</span></div>
+      </div>
+      <div class="media">
+        <div class="phone vp"><div class="scr"><img src="case-study-assets/pattern.png" alt="Pattern screen — four hormone curves over a 28-day cycle with draggable cursor, phase card for the selected day, anonymous community notes" loading="lazy"></div></div>
+        <div class="phone-cap">CYCLE PATTERN — HORMONES + COMMUNITY</div>
+      </div>
+    </div>
+
+    <p class="body" style="margin-top:56px">And when a 28-day curve isn't your reality — <strong>Finding F</strong> — home itself switches mode. Answer “Irregular” or “No period,” flag hormone therapy or perimenopause in onboarding, and instead of a pattern the app can't honestly draw, you get a screen built for your situation. These screens are also designed to make a quieter point: <strong>underneath the tracker, this is a journal</strong> — prediction may step back, but daily logging carries value for everyone.</p>
+    <div class="trio">
+      <div>
+        <div class="phone vp"><div class="scr"><img src="case-study-assets/mode-irregular.png" alt="Irregular-cycle mode home — Your Cycle, Your Story header, why-logging-helps cards, common cycle disruptor chips, logging streak note" loading="lazy"></div></div>
+        <div class="phone-cap">IRREGULAR MODE — RHYTHM, NOT A 28-DAY CLOCK</div>
+      </div>
+      <div>
+        <div class="phone vp"><div class="scr"><img src="case-study-assets/mode-hormone.png" alt="Hormone therapy mode home — therapy-aware tracking with meds and symptom focus instead of cycle prediction" loading="lazy"></div></div>
+        <div class="phone-cap">HORMONE THERAPY MODE — MEDS-AWARE TRACKING</div>
+      </div>
+      <div>
+        <div class="phone vp"><div class="scr"><img src="case-study-assets/mode-peri.png" alt="Perimenopause mode home — transition-focused guidance and symptom tracking without regularity judgement" loading="lazy"></div></div>
+        <div class="phone-cap">PERIMENOPAUSE MODE — NO REGULARITY JUDGEMENT</div>
+      </div>
+    </div>
+
+    <p class="body" style="margin-top:56px">The content layer follows the same rule. <strong>Tips and the Blog are personalised too</strong> — both re-rank by the mode the app is in and the phase you're on: menstrual-phase rest advice for a regular cycle, trigger-focused reads for irregular ones, therapy-aware guidance on hormone therapy.</p>
+    <div class="trio">
+      <div>
+        <div class="phone vp"><div class="scr"><img src="case-study-assets/suggest.png" alt="Suggestions screen — phase-specific guidance with exercise and food cards for the menstrual phase" loading="lazy"></div></div>
+        <div class="phone-cap">TIPS — PERSONALISED PER MODE + PHASE</div>
+      </div>
+      <div>
+        <div class="phone vp"><div class="scr"><img src="case-study-assets/blog.jpg" alt="Blog screen — search, featured daily read, category chips and article list with photography" loading="lazy"></div></div>
+        <div class="phone-cap">BLOG — FEED FOLLOWS YOUR MODE</div>
+      </div>
+      <div>
+        <div class="phone vp"><div class="scr live"><iframe src="meditation-player.html" title="Live meditation player prototype — tap Ready" loading="lazy"></iframe></div></div>
+        <div class="phone-cap">MEDITATE — LIVE DEMO · TAP READY</div>
+      </div>
+    </div>
+
+    <p class="body" style="margin-top:26px">Stress sits at the top of the common cycle-disruptor list — Meditate is the rest moment built for it. The screen composes its visuals live, in tune with the music: <strong>each track paints its own palette and movement</strong>, and the whole field slows down as your session begins. The controls fade away after a few seconds and return with a tap — no feed, no streak, nothing to win. The third phone above is the real thing: tap Ready.</p>
+
+    <div class="feature">
+      <div class="txt">
+        <h3>Settings that read like a <em>receipt of the research</em></h3>
+        <p>Cycle length and period duration as steppers, hormone-therapy as a first-class toggle that adds a Meds row to the daily log — and under About, one line that is the entire privacy policy: <strong>“All data stored locally on device.”</strong></p>
+        <div class="tags"><span class="tag">trust as a feature</span></div>
+      </div>
+      <div class="media">
+        <div class="phone vp"><div class="scr live"><iframe src="settings-preview.html" title="Live settings screen — flip the Irregular Cycle switch" loading="lazy"></iframe></div></div>
+        <div class="phone-cap">SETTINGS — LIVE · FLIP THE IRREGULAR SWITCH</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section class="block">
+  <div class="wrap rev">
+    <div class="secnum">04 — NOT JUST PICTURES</div>
+    <h2>A system and a prototype, <em>not a stack of mockups</em></h2>
+    <p class="body">The design lives twice, deliberately. In <strong>Figma</strong>: a token library (color, space, radius variables), nine text styles, and 20+ components with variants — every screen assembled from instances, so a token change propagates everywhere. In <strong>code</strong>: a working React&nbsp;Native / Expo prototype sharing the same tokens 1:1. React&nbsp;Native is the framework production iOS and Android apps ship with — so what you see here isn't a click-through mockup; it's the actual app running on a phone. The arc date picker, the hormone chart and the meditation shader all run for real. Every screen on this page is exported straight from that synced design file.</p>
+    <div class="stats">
+      <div class="stat"><div class="big">18</div><div class="desc">screens — 10 core + 8 onboarding — built as component instances.</div></div>
+      <div class="stat"><div class="big">20<span>+</span></div><div class="desc">library components with variants, bound to token variables.</div></div>
+      <div class="stat"><div class="big">1<span>:1</span></div><div class="desc">token parity between the Figma library and the app's theme file.</div></div>
+      <div class="stat"><div class="big">10<span>/37</span></div><div class="desc">would pay for doctor-ready reports — the first paid-feature candidate on the roadmap.</div></div>
+    </div>
+  </div>
+</section>
+
+<section class="block">
+  <div class="wrap rev">
+    <div class="secnum">05 — HONESTLY, THOUGH</div>
+    <h2>Limitations &amp; what I'd do next</h2>
+    <div class="refl">
+      <div>
+        <h4>What this isn't</h4>
+        <p>37 survey responses across two languages can't prove anything — they point. The secondary research oversamples people unhappy enough to write reviews. And the design decisions above are hypotheses made testable, not tested: no usability sessions have validated them yet.</p>
+      </div>
+      <div>
+        <h4>Where I'd go next</h4>
+        <p>Five moderated sessions watching first-time setup on the working prototype; a prediction-accuracy diary study against the built-in Health app; and a focused deep-dive with irregular-cycle and perimenopause users — the strongest validated group in the research. On the product side, two steps: <strong>doctor-ready reports</strong> — one of the strongest payment signals in the data (10 of 37 said they'd pay for it), shipped nag-free per Finding C as the first paid feature — and a <strong>perimenopause mode</strong>: 8 of 37 respondents were 45+ (6 of 11 in the Turkish survey), built on top of the existing Home variants.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="wrap">
+    <div class="big">From 37 messy survey rows to a design system, 18 screens and a prototype — with every decision traceable back to a finding.</div>
+    <div class="meta">RESEARCH → DESIGN CASE STUDY<br>SELF-INITIATED · 2025–26</div>
+  </div>
+</footer>
+
+<script>
+  // scroll reveal
+  const io=new IntersectionObserver((es)=>{
+    es.forEach(e=>{
+      if(e.isIntersecting){
+        e.target.classList.add('in');
+        e.target.querySelectorAll('.fill').forEach(f=>{f.style.width=(f.dataset.w||0)+'%'});
+        io.unobserve(e.target);
+      }
+    });
+  },{threshold:0,rootMargin:'0px 0px -60px 0px'});
+  document.querySelectorAll('.rev').forEach(el=>io.observe(el));
+  window.addEventListener('load',()=>{
+    document.querySelectorAll('.hero .fill').forEach(f=>f.style.width=(f.dataset.w||0)+'%');
+  });
+
+  // scrolly — home screen, annotated (bidirectional, rAF-coalesced)
+  (function(){
+    const track=document.getElementById('scTrack');
+    if(!track)return;
+    const stage=track.querySelector('.sc-stage');
+    const cuts=[document.getElementById('scCut0'),document.getElementById('scCut1')];
+    const rims=[document.getElementById('scRim0'),document.getElementById('scRim1')];
+    const steps=track.querySelectorAll('.sc-step');
+    const dots=track.querySelectorAll('.sc-dots span');
+    const SC_STEPS=[
+      {intro:true},
+      {rects:[{x:117,y:43,w:160,h:35,rx:18}]},
+      {rects:[{x:194,y:100,w:182,h:104,rx:22},{x:200,y:752,w:178,h:68,rx:34}]},
+      {rects:[{x:14,y:206,w:362,h:269,rx:18}]},
+      {rects:[{x:14,y:476,w:362,h:87,rx:18}]},
+      {rects:[{x:14,y:567,w:362,h:172,rx:18}]}
+    ];
+    let current=0;
+    function setRect(el,r,vis){
+      el.style.setProperty('x',r.x+'px');
+      el.style.setProperty('y',r.y+'px');
+      el.style.setProperty('width',r.w+'px');
+      el.style.setProperty('height',r.h+'px');
+      el.setAttribute('rx',r.rx);
+      el.style.opacity=vis?1:0;
+    }
+    function activate(i){
+      current=i;
+      stage.classList.toggle('is-intro',!!SC_STEPS[i].intro);
+      const rs=SC_STEPS[i].rects;
+      if(rs){
+        for(let k=0;k<2;k++){
+          setRect(cuts[k],rs[k]||rs[0],!!rs[k]);
+          setRect(rims[k],rs[k]||rs[0],!!rs[k]);
+        }
+      }
+      steps.forEach(s=>s.classList.toggle('on',+s.dataset.step===i));
+      dots.forEach((d,k)=>d.classList.toggle('on',k===i-1));
+    }
+    let tick=false;
+    function onScroll(){
+      if(tick)return;
+      tick=true;
+      requestAnimationFrame(()=>{
+        tick=false;
+        const r=track.getBoundingClientRect();
+        const usable=track.offsetHeight-stage.offsetHeight;
+        const p=Math.min(1,Math.max(0,-r.top/(usable||1)));
+        const idx=Math.min(SC_STEPS.length-1,Math.floor(p*SC_STEPS.length));
+        if(idx!==current)activate(idx);
+      });
+    }
+    window.addEventListener('scroll',onScroll,{passive:true});
+    window.addEventListener('resize',onScroll,{passive:true});
+    activate(0);
+    onScroll();
+  })();
+
+  // scrolly — finding F unfolds (card opens into the research steps)
+  (function(){
+    const track=document.getElementById('fsTrack');
+    if(!track)return;
+    const stage=track.querySelector('.fs-stage');
+    const steps=track.querySelectorAll('.fs-step');
+    const hero=track.querySelector('.fs-hero');
+    const cards=track.parentElement.querySelectorAll('.fcard');
+    const mate=cards[cards.length-1];
+    function sizeHero(){
+      if(mate&&hero)hero.style.setProperty('--mate-h',mate.offsetHeight+'px');
+    }
+    sizeHero();
+    window.addEventListener('load',sizeHero);
+    window.addEventListener('resize',sizeHero,{passive:true});
+    const N=steps.length+1;
+    let cur=-1;
+    function act(i){
+      cur=i;
+      stage.classList.toggle('open',i>0);
+      steps.forEach(s=>s.classList.toggle('on',+s.dataset.fs===i));
+    }
+    let tick=false;
+    function onScroll(){
+      if(tick)return;
+      tick=true;
+      requestAnimationFrame(()=>{
+        tick=false;
+        const r=track.getBoundingClientRect();
+        const usable=track.offsetHeight-stage.offsetHeight;
+        const p=Math.min(1,Math.max(0,-r.top/(usable||1)));
+        const idx=Math.min(N-1,Math.floor(p*N));
+        if(idx!==cur)act(idx);
+      });
+    }
+    window.addEventListener('scroll',onScroll,{passive:true});
+    window.addEventListener('resize',onScroll,{passive:true});
+    act(0);
+    onScroll();
+  })();
+
+  // live embed — scale the 390x844 prototype iframe to its cell
+  (function(){
+    const wraps=document.querySelectorAll('.scr.live');
+    if(!wraps.length)return;
+    const fit=()=>wraps.forEach(w=>{
+      const f=w.querySelector('iframe');
+      if(f)f.style.transform=`scale(${w.clientWidth/390})`;
+    });
+    fit();
+    window.addEventListener('resize',fit,{passive:true});
+  })();
+</script>
+</body>
+</html>

@@ -1,0 +1,319 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>period. — Settings screen (live preview)</title>
+<meta name="description" content="Live HTML replica of the RN Settings screen: profile, the two-state Irregular Cycle switch that locks cycle length and duration, hormone therapy, notifications.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Jaro&family=Nunito:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  /* ─── TOKENS (src/theme/index.js 1:1) ────────────────────── */
+  :root{
+    --bg:#f4f2fb;
+    --primary:#3b21e3;
+    --primary-soft:rgba(59,33,227,.08);
+    --text:#222730;
+    --text-dim:#9aa5b1;
+    --font-display:'Jaro',sans-serif;
+    --font-body:'Nunito',sans-serif;
+    --radius-card:12px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{
+    background:var(--bg);
+    font-family:var(--font-body);
+    min-height:100vh;
+    display:flex;align-items:center;justify-content:center;
+  }
+
+  /* ─── PHONE STAGE — centered on desktop, fullscreen in iframe/mobile ── */
+  .stage{
+    position:relative;width:390px;height:844px;
+    border-radius:36px;overflow:hidden;
+    box-shadow:0 24px 80px rgba(28,20,60,.25);
+    background:var(--bg);
+  }
+  @media(max-width:480px),(max-height:900px){
+    body{align-items:stretch;justify-content:stretch}
+    .stage{width:100vw;height:100vh;height:100dvh;border-radius:0;box-shadow:none}
+  }
+
+  .screen{height:100%;overflow-y:auto;scrollbar-width:none;padding:0 20px 48px}
+  .screen::-webkit-scrollbar{display:none}
+
+  /* ─── TOP BAR (src/components/TopBar.js) ─────────────────── */
+  .topbar{display:flex;justify-content:space-between;align-items:center;padding:48px 2px 0;height:96px}
+  .icon-btn{
+    width:44px;height:44px;border-radius:22px;border:1px solid rgba(255,255,255,.70);
+    background:rgba(255,255,255,.58);cursor:pointer;
+    display:flex;align-items:center;justify-content:center;
+    box-shadow:0 2px 6px rgba(0,0,0,.07);
+    transition:background .2s;
+  }
+  .icon-btn:hover{background:rgba(255,255,255,.85)}
+  .icon-btn svg{width:20px;height:20px;stroke:var(--text);fill:none;stroke-width:1.7}
+  .back-row{display:flex;align-items:center;min-height:36px;padding:6px 0}
+  .back-btn{border:none;background:transparent;cursor:pointer;display:flex;align-items:center;padding:4px}
+  .back-btn svg{width:18px;height:18px;stroke:var(--text);fill:none;stroke-width:2.2}
+
+  /* ─── SETTINGS (src/screens/SettingsScreen.js) ───────────── */
+  .section-label{
+    font-family:var(--font-display);font-size:12px;color:var(--text-dim);
+    text-transform:uppercase;letter-spacing:1px;padding:18px 0 8px;
+  }
+  .card{
+    background:rgba(255,255,255,.58);
+    border:1px solid rgba(255,255,255,.70);
+    border-radius:var(--radius-card);
+    overflow:hidden;box-shadow:0 1px 6px rgba(0,0,0,.05);
+  }
+  .profile{display:flex;align-items:center;gap:14px;padding:16px}
+  .avatar{
+    width:54px;height:54px;border-radius:27px;flex-shrink:0;
+    background:var(--primary);color:#fff;
+    font-family:var(--font-display);font-size:24px;
+    display:flex;align-items:center;justify-content:center;
+  }
+  .profile-name{font-family:var(--font-display);font-size:22px;color:var(--text)}
+  .profile-sub{font-size:12px;color:var(--text-dim);margin-top:2px}
+  .edit-btn{
+    width:36px;height:36px;border-radius:18px;border:none;cursor:pointer;
+    background:var(--primary-soft);margin-left:auto;flex-shrink:0;
+    display:flex;align-items:center;justify-content:center;
+  }
+  .edit-btn svg{width:16px;height:16px;stroke:var(--primary);fill:none;stroke-width:1.8}
+
+  .row{
+    display:flex;align-items:center;justify-content:space-between;gap:12px;
+    padding:14px;border-bottom:1px solid rgba(0,0,0,.06);
+  }
+  .row:last-child{border-bottom:none}
+  .row-title{font-weight:700;font-size:15px;color:var(--text)}
+  .row-sub{font-size:12px;color:var(--text-dim);margin-top:2px}
+
+  .switch{
+    position:relative;width:51px;height:31px;flex-shrink:0;
+    border-radius:999px;border:none;cursor:pointer;
+    background:rgba(0,0,0,.08);transition:background .2s;
+  }
+  .switch::after{
+    content:'';position:absolute;top:2px;left:2px;
+    width:27px;height:27px;border-radius:50%;
+    background:#fff;box-shadow:0 2px 5px rgba(0,0,0,.25);
+    transition:transform .2s;
+  }
+  .switch[aria-checked="true"]{background:var(--primary)}
+  .switch[aria-checked="true"]::after{transform:translateX(20px)}
+
+  /* Stepper — bare glyphs, no button background */
+  .stepper{display:flex;align-items:center;gap:8px;transition:opacity .25s}
+  .stepper.disabled{opacity:.35;pointer-events:none}
+  .step-btn{
+    width:34px;height:34px;border-radius:17px;border:none;cursor:pointer;
+    background:transparent;color:var(--primary);
+    font-size:20px;font-weight:700;line-height:1;
+    display:flex;align-items:center;justify-content:center;
+    transition:background .15s;
+  }
+  .step-btn:hover{background:var(--primary-soft)}
+  .step-val{min-width:42px;text-align:center}
+  .step-num{font-family:var(--font-display);font-size:22px;color:var(--primary);line-height:24px}
+  .step-unit{font-size:10px;color:var(--text-dim)}
+
+  .therapy-row{display:none;flex-wrap:wrap;gap:8px;padding:12px 14px 14px}
+  .therapy-row.on{display:flex}
+  .therapy-tag{
+    border-radius:999px;border:1.5px solid rgba(0,0,0,.14);
+    background:rgba(255,255,255,.50);color:var(--text);
+    padding:8px 14px;font-family:var(--font-body);font-weight:700;font-size:12px;
+    cursor:pointer;transition:background .15s,border-color .15s,color .15s;
+  }
+  .therapy-tag.active{background:var(--primary);border-color:var(--primary);color:#fff}
+
+  .footer-note{text-align:center;padding:20px;font-size:12px;color:var(--text-dim)}
+</style>
+</head>
+<body>
+
+<div class="stage">
+  <div class="screen">
+    <div class="topbar">
+      <button class="icon-btn" aria-label="Calendar">
+        <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="15.5" rx="2.5"/><path d="M3.5 9.5h17M8 3v3.5M16 3v3.5"/></svg>
+      </button>
+      <button class="icon-btn" aria-label="Settings">
+        <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+      </button>
+    </div>
+    <div class="back-row">
+      <button class="back-btn" aria-label="Back">
+        <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg>
+      </button>
+    </div>
+
+    <div class="section-label">Profile</div>
+    <div class="card">
+      <div class="profile">
+        <div class="avatar" id="avatar">Y</div>
+        <div>
+          <div class="profile-name" id="profileName">You</div>
+          <div class="profile-sub">Period Tracker</div>
+        </div>
+        <button class="edit-btn" aria-label="Edit name">
+          <svg viewBox="0 0 24 24" stroke-linecap="round" stroke-linejoin="round"><path d="M16.5 3.9a2.1 2.1 0 0 1 3 3L7 19.5 3 20.5l1-4L16.5 3.9z"/></svg>
+        </button>
+      </div>
+    </div>
+
+    <div class="section-label">Cycle Settings</div>
+    <div class="card">
+      <div class="row">
+        <div>
+          <div class="row-title">Irregular Cycle</div>
+          <div class="row-sub" id="switchSub">Turn on if your cycle doesn't follow a clock</div>
+        </div>
+        <button class="switch" id="irrSwitch" role="switch" aria-checked="false" aria-label="Irregular cycle"></button>
+      </div>
+      <div class="row">
+        <div>
+          <div class="row-title">Cycle Length</div>
+          <div class="row-sub" data-locked-sub>Average days in your cycle</div>
+        </div>
+        <div class="stepper" data-stepper>
+          <button class="step-btn" data-delta="-1" data-min="21" data-max="40" data-for="lenVal">−</button>
+          <div class="step-val"><div class="step-num" id="lenVal">28</div><div class="step-unit">days</div></div>
+          <button class="step-btn" data-delta="1" data-min="21" data-max="40" data-for="lenVal">+</button>
+        </div>
+      </div>
+      <div class="row">
+        <div>
+          <div class="row-title">Period Duration</div>
+          <div class="row-sub" data-locked-sub>Average length of your period</div>
+        </div>
+        <div class="stepper" data-stepper>
+          <button class="step-btn" data-delta="-1" data-min="2" data-max="10" data-for="durVal">−</button>
+          <div class="step-val"><div class="step-num" id="durVal">5</div><div class="step-unit">days</div></div>
+          <button class="step-btn" data-delta="1" data-min="2" data-max="10" data-for="durVal">+</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="section-label">Hormone Therapy</div>
+    <div class="card">
+      <div class="row">
+        <div>
+          <div class="row-title">On hormone therapy</div>
+          <div class="row-sub">Adds a daily Meds row to your log</div>
+        </div>
+        <button class="switch" id="hrtSwitch" role="switch" aria-checked="false" aria-label="On hormone therapy"></button>
+      </div>
+      <div class="therapy-row" id="therapyRow">
+        <button class="therapy-tag">Pill</button>
+        <button class="therapy-tag">IUD</button>
+        <button class="therapy-tag">HRT</button>
+        <button class="therapy-tag">Implant</button>
+        <button class="therapy-tag">Other</button>
+      </div>
+    </div>
+
+    <div class="section-label">Notifications</div>
+    <div class="card">
+      <div class="row">
+        <div>
+          <div class="row-title">Period Reminders</div>
+          <div class="row-sub">3 days before predicted start</div>
+        </div>
+        <button class="switch toggle" role="switch" aria-checked="true" aria-label="Period reminders"></button>
+      </div>
+      <div class="row">
+        <div>
+          <div class="row-title">Daily Log Reminder</div>
+          <div class="row-sub">Every evening at 8 PM</div>
+        </div>
+        <button class="switch toggle" role="switch" aria-checked="false" aria-label="Daily log reminder"></button>
+      </div>
+      <div class="row">
+        <div>
+          <div class="row-title">Ovulation Window</div>
+          <div class="row-sub">2 days before &amp; after</div>
+        </div>
+        <button class="switch toggle" role="switch" aria-checked="true" aria-label="Ovulation window"></button>
+      </div>
+    </div>
+
+    <div class="section-label">About</div>
+    <div class="card">
+      <div class="row">
+        <div>
+          <div class="row-title">Period Tracker</div>
+          <div class="row-sub">Version 1.0.0</div>
+        </div>
+      </div>
+      <div class="row">
+        <div>
+          <div class="row-title">Data &amp; Privacy</div>
+          <div class="row-sub">All data stored locally on device</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="footer-note">Made with care for your health</div>
+  </div>
+</div>
+
+<script>
+/* Irregular Cycle switch — locks the two steppers, mirrors SettingsScreen.js */
+const irrSwitch = document.getElementById('irrSwitch');
+const switchSub = document.getElementById('switchSub');
+const steppers = document.querySelectorAll('[data-stepper]');
+const lockedSubs = document.querySelectorAll('[data-locked-sub]');
+const NORMAL_SUBS = ['Average days in your cycle', 'Average length of your period'];
+
+irrSwitch.addEventListener('click', () => {
+  const on = irrSwitch.getAttribute('aria-checked') !== 'true';
+  irrSwitch.setAttribute('aria-checked', String(on));
+  switchSub.textContent = on
+    ? 'Predictions paused — your own rhythm leads'
+    : "Turn on if your cycle doesn't follow a clock";
+  steppers.forEach(s => s.classList.toggle('disabled', on));
+  lockedSubs.forEach((el, i) => {
+    el.textContent = on ? 'Locked — turn off Irregular Cycle' : NORMAL_SUBS[i];
+  });
+});
+
+document.querySelectorAll('.step-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const val = document.getElementById(btn.dataset.for);
+    const next = parseInt(val.textContent, 10) + parseInt(btn.dataset.delta, 10);
+    val.textContent = Math.max(+btn.dataset.min, Math.min(+btn.dataset.max, next));
+  });
+});
+
+/* Hormone therapy switch reveals the type tags (single-select) */
+const hrtSwitch = document.getElementById('hrtSwitch');
+const therapyRow = document.getElementById('therapyRow');
+hrtSwitch.addEventListener('click', () => {
+  const on = hrtSwitch.getAttribute('aria-checked') !== 'true';
+  hrtSwitch.setAttribute('aria-checked', String(on));
+  therapyRow.classList.toggle('on', on);
+});
+therapyRow.querySelectorAll('.therapy-tag').forEach(tag => {
+  tag.addEventListener('click', () => {
+    const was = tag.classList.contains('active');
+    therapyRow.querySelectorAll('.therapy-tag').forEach(t => t.classList.remove('active'));
+    if (!was) tag.classList.add('active');
+  });
+});
+
+/* Plain two-state notification switches */
+document.querySelectorAll('.switch.toggle').forEach(sw => {
+  sw.addEventListener('click', () => {
+    sw.setAttribute('aria-checked', String(sw.getAttribute('aria-checked') !== 'true'));
+  });
+});
+</script>
+</body>
+</html>

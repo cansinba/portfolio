@@ -1,0 +1,475 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>period. — Meditate player prototype</title>
+<meta name="description" content="Live prototype of the Meditate screen: Ready → 3-2-1 countdown over a WebGL voronoi background, then a glass player bar with play/pause, track name and prev/next.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Jaro&family=Nunito:wght@400;700&display=swap" rel="stylesheet">
+<style>
+  /* ─── TOKENS ─────────────────────────────────────────────── */
+  :root{
+    --app-bg:#f4f2fb;
+    --primary:#3b21e3;
+    --text:#222730;
+    --dim:#9aa5b1;
+    --glass-bg:rgba(255,255,255,.18);
+    --glass-line:rgba(255,255,255,.55);
+    --font-display:'Jaro',sans-serif;
+    --font-body:'Nunito',sans-serif;
+    --radius-card:16px;
+    --radius-pill:999px;
+  }
+  *{box-sizing:border-box;margin:0;padding:0}
+  html,body{height:100%}
+  body{
+    background:var(--app-bg);
+    font-family:var(--font-body);
+    display:flex;align-items:center;justify-content:center;
+    min-height:100vh;
+  }
+
+  /* ─── PHONE STAGE — centered frame on desktop, fullscreen on mobile ── */
+  .stage{
+    position:relative;
+    width:390px;height:844px;
+    border-radius:36px;
+    overflow:hidden;
+    box-shadow:0 24px 80px rgba(28,20,60,.35);
+    background:#0a0240;
+  }
+  @media(max-width:480px),(max-height:900px){
+    body{align-items:stretch;justify-content:stretch}
+    .stage{width:100vw;height:100vh;height:100dvh;border-radius:0;box-shadow:none}
+  }
+
+  canvas#bg{position:absolute;inset:0;width:100%;height:100%;display:block}
+
+  /* ─── BACK BUTTON ────────────────────────────────────────── */
+  .back{
+    position:absolute;left:16px;top:24px;z-index:30;
+    width:44px;height:44px;border-radius:50%;
+    background:rgba(0,0,0,.22);
+    border:none;cursor:pointer;
+    display:flex;align-items:center;justify-content:center;
+    transition:background .2s;
+  }
+  .back:hover{background:rgba(0,0,0,.34)}
+  .back svg{width:18px;height:18px;stroke:rgba(255,255,255,.85)}
+
+  /* ─── CENTER: READY / COUNTDOWN ──────────────────────────── */
+  .center{
+    position:absolute;inset:0;z-index:20;
+    display:flex;align-items:center;justify-content:center;
+    pointer-events:none;
+  }
+  .ready{
+    pointer-events:auto;
+    font-family:var(--font-display);
+    font-size:28px;letter-spacing:1px;
+    color:rgba(255,255,255,.95);
+    padding:18px 52px;border-radius:var(--radius-pill);
+    background:var(--glass-bg);
+    border:1.5px solid var(--glass-line);
+    box-shadow:0 4px 16px rgba(0,0,0,.18);
+    cursor:pointer;
+    backdrop-filter:blur(6px);
+    transition:transform .2s,background .2s,opacity .3s;
+  }
+  .ready:hover{background:rgba(255,255,255,.28)}
+  .ready:active{transform:scale(.96)}
+  .idle-group{display:flex;flex-direction:column;align-items:center;gap:22px;transition:opacity .3s}
+  .idle-group.gone{opacity:0;pointer-events:none}
+  .invite{
+    font-family:var(--font-display);
+    font-size:19px;letter-spacing:.6px;
+    color:rgba(255,255,255,.92);
+    text-shadow:0 2px 14px rgba(59,33,227,.35);
+  }
+
+  .count{
+    position:absolute;
+    font-family:var(--font-display);
+    font-size:120px;line-height:1;
+    color:rgba(255,255,255,.9);
+    text-shadow:0 0 32px var(--primary);
+    opacity:0;
+  }
+  .count.pop{animation:pop 1s cubic-bezier(.16,1.2,.3,1) forwards}
+  .count.fade{animation:fadeout .4s ease forwards}
+  @keyframes pop{
+    0%{opacity:0;transform:scale(1.6)}
+    18%{opacity:1;transform:scale(.94)}
+    32%{transform:scale(1.03)}
+    45%,100%{opacity:1;transform:scale(1)}
+  }
+  @keyframes fadeout{to{opacity:0;transform:scale(.9)}}
+
+  /* ─── PLAYER BAR ─────────────────────────────────────────── */
+  .player{
+    position:absolute;left:16px;right:16px;bottom:24px;z-index:25;
+    border-radius:var(--radius-card);
+    background:var(--glass-bg);
+    border:1.5px solid rgba(255,255,255,.4);
+    backdrop-filter:blur(14px);
+    -webkit-backdrop-filter:blur(14px);
+    padding:14px 16px 16px;
+    box-shadow:0 8px 32px rgba(0,0,0,.22);
+    opacity:0;transform:translateY(24px);
+    pointer-events:none;
+    transition:opacity .5s ease,transform .5s cubic-bezier(.2,.8,.2,1);
+  }
+  .player.on{opacity:1;transform:none;pointer-events:auto}
+
+  .track-info{text-align:center;margin-bottom:10px}
+  .track-name{
+    font-family:var(--font-display);
+    font-size:20px;color:rgba(255,255,255,.95);
+    letter-spacing:.5px;
+  }
+  .track-tag{
+    font-family:var(--font-body);font-weight:700;
+    font-size:10px;letter-spacing:1.6px;text-transform:uppercase;
+    color:rgba(255,255,255,.55);margin-top:3px;
+  }
+
+  .progress{
+    height:3px;border-radius:2px;overflow:hidden;
+    background:rgba(255,255,255,.22);
+    margin-bottom:12px;
+  }
+  .progress .fill{
+    height:100%;width:0;border-radius:2px;
+    background:rgba(255,255,255,.9);
+  }
+
+  .controls{display:flex;align-items:center;justify-content:center;gap:22px}
+  .ctl{
+    border:none;cursor:pointer;border-radius:50%;
+    display:flex;align-items:center;justify-content:center;
+    background:transparent;
+    width:44px;height:44px;
+    transition:background .2s,transform .15s;
+  }
+  .ctl:hover{background:rgba(255,255,255,.16)}
+  .ctl:active{transform:scale(.92)}
+  .ctl svg{width:20px;height:20px;fill:rgba(255,255,255,.85)}
+  .ctl.play{
+    width:56px;height:56px;
+    background:rgba(255,255,255,.92);
+    box-shadow:0 4px 14px rgba(0,0,0,.25);
+  }
+  .ctl.play:hover{background:#fff}
+  .ctl.play svg{width:22px;height:22px;fill:var(--primary)}
+</style>
+</head>
+<body>
+
+<div class="stage">
+  <canvas id="bg"></canvas>
+
+  <button class="back" aria-label="Go back">
+    <svg viewBox="0 0 24 24" fill="none" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg>
+  </button>
+
+  <div class="center">
+    <div class="idle-group" id="idleGroup">
+      <p class="invite">Take time for yourself.</p>
+      <button class="ready" id="readyBtn">Ready</button>
+    </div>
+    <div class="count" id="countNum" aria-live="assertive">3</div>
+  </div>
+
+  <div class="player" id="player">
+    <div class="track-info">
+      <div class="track-name" id="trackName">Velvet Horizon</div>
+      <div class="track-tag" id="trackTag">Soul Jazz · Calm</div>
+    </div>
+    <div class="progress"><div class="fill" id="progressFill"></div></div>
+    <div class="controls">
+      <button class="ctl" id="prevBtn" aria-label="Previous track">
+        <svg viewBox="0 0 24 24"><path d="M6 5h2.4v14H6zM18.5 5.6v12.8a.7.7 0 0 1-1.1.57L8.7 12.6a.72.72 0 0 1 0-1.2l8.7-6.37a.7.7 0 0 1 1.1.57z"/></svg>
+      </button>
+      <button class="ctl play" id="playBtn" aria-label="Pause">
+        <svg id="iconPause" viewBox="0 0 24 24"><path d="M7 5h3.4v14H7zM13.6 5H17v14h-3.4z"/></svg>
+        <svg id="iconPlay" viewBox="0 0 24 24" style="display:none"><path d="M8 5.4v13.2a.75.75 0 0 0 1.16.63l10.1-6.6a.75.75 0 0 0 0-1.26L9.16 4.77A.75.75 0 0 0 8 5.4z"/></svg>
+      </button>
+      <button class="ctl" id="nextBtn" aria-label="Next track">
+        <svg viewBox="0 0 24 24"><path d="M15.6 5H18v14h-2.4zM5.5 5.6v12.8a.7.7 0 0 0 1.1.57l8.7-6.37a.72.72 0 0 0 0-1.2L6.6 5.03a.7.7 0 0 0-1.1.57z"/></svg>
+      </button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ─── WebGL voronoi background — 1:1 port of src/screens/PlayerScreen.js ── */
+const VERT = `
+  attribute vec2 aPos;
+  varying   vec2 vUv;
+  void main() {
+    vUv = aPos * 0.5 + 0.5;
+    gl_Position = vec4(aPos, 0.0, 1.0);
+  }
+`;
+const FRAG = `
+  precision mediump float;
+  varying vec2 vUv;
+  uniform float uTime;
+  uniform float uSpeed;
+  uniform vec2  uRes;
+  uniform vec3  uSoft;
+  uniform vec3  uPrim;
+  uniform vec3  uDark;
+  uniform float uZoom;
+  uniform float uWarp;
+
+  vec2 hash2(vec2 p) {
+    float a = dot(p, vec2(127.1, 311.7));
+    float b = dot(p, vec2(269.5, 183.3));
+    return fract(sin(vec2(a, b)) * 43758.5453);
+  }
+
+  float voro(vec2 uv, float t, float amp) {
+    vec2 ip = floor(uv);
+    vec2 fp = fract(uv);
+    float md = 1e5;
+    for (int y = -1; y <= 1; y++) {
+      for (int x = -1; x <= 1; x++) {
+        vec2 nb  = vec2(float(x), float(y));
+        vec2 jit = hash2(ip + nb);
+        vec2 pt  = nb + jit + amp * sin(t * 0.35 + 6.2831 * jit);
+        float d  = dot(fp - pt, fp - pt);
+        md = min(md, d);
+      }
+    }
+    return sqrt(md);
+  }
+
+  void main() {
+    vec2 uv = vUv;
+    uv.x   *= uRes.x / uRes.y;
+    uv *= uZoom - (uSpeed - 1.0) * 0.55;
+
+    float t   = uTime;
+    float amp = 0.28 + 0.18 * (uSpeed - 1.0);
+
+    float v1 = voro(uv, t, amp);
+    vec2 w = vec2(
+      voro(uv + vec2(1.7, 9.2), t * 0.6, amp),
+      voro(uv + vec2(8.3, 2.8), t * 0.5 + 1.5, amp)
+    );
+    float v2 = voro(uv + uWarp * w, t * 0.55 + 0.7, amp);
+    float v3 = voro(uv * 2.1 + 0.4 * w, t * 0.8 + 2.3, amp);
+
+    float v = 0.50 * v1 + 0.30 * v2 + 0.20 * v3;
+
+    float veins = 1.0 - smoothstep(0.0,  0.22, v);
+    float body  =       smoothstep(0.22, 0.52, v);
+
+    vec3 bg   = vec3(0.957, 0.949, 0.984);
+    vec3 soft = uSoft;
+    vec3 prim = uPrim;
+    vec3 dark = uDark;
+
+    vec3 col = bg;
+    col = mix(col, soft, body  * 0.55);
+    col = mix(col, prim, veins * 0.88);
+    col = mix(col, dark, veins * veins * 0.55);
+
+    gl_FragColor = vec4(col, 1.0);
+  }
+`;
+
+const canvas = document.getElementById('bg');
+const gl = canvas.getContext('webgl');
+
+// Target speed per phase — idle is energetic, meditation slows the field down
+const SPEED = { idle: 3.5, counting: 2.2, active: 1.0, paused: 2.0 };
+let targetSpeed = SPEED.idle;
+let currentSpeed = SPEED.idle;
+
+// Per-track shader palette + pattern (zoom = cell density, warp = flow distortion)
+const VELVET = { soft: [0.486, 0.435, 0.980], prim: [0.231, 0.129, 0.890], dark: [0.039, 0.008, 0.247], zoom: 4.2, warp: 0.85 };
+let targetPal = VELVET;
+let curPal = JSON.parse(JSON.stringify(VELVET));
+
+if (gl) {
+  const make = (type, src) => {
+    const s = gl.createShader(type);
+    gl.shaderSource(s, src); gl.compileShader(s);
+    return s;
+  };
+  const prog = gl.createProgram();
+  gl.attachShader(prog, make(gl.VERTEX_SHADER, VERT));
+  gl.attachShader(prog, make(gl.FRAGMENT_SHADER, FRAG));
+  gl.linkProgram(prog);
+  gl.useProgram(prog);
+
+  const buf = gl.createBuffer();
+  gl.bindBuffer(gl.ARRAY_BUFFER, buf);
+  gl.bufferData(gl.ARRAY_BUFFER, new Float32Array([-1,-1, 1,-1, -1,1, 1,1]), gl.STATIC_DRAW);
+  const aPos = gl.getAttribLocation(prog, 'aPos');
+  gl.enableVertexAttribArray(aPos);
+  gl.vertexAttribPointer(aPos, 2, gl.FLOAT, false, 0, 0);
+
+  const uTime  = gl.getUniformLocation(prog, 'uTime');
+  const uSpeed = gl.getUniformLocation(prog, 'uSpeed');
+  const uRes   = gl.getUniformLocation(prog, 'uRes');
+  const uSoft  = gl.getUniformLocation(prog, 'uSoft');
+  const uPrim  = gl.getUniformLocation(prog, 'uPrim');
+  const uDark  = gl.getUniformLocation(prog, 'uDark');
+  const uZoom  = gl.getUniformLocation(prog, 'uZoom');
+  const uWarp  = gl.getUniformLocation(prog, 'uWarp');
+
+  function resize() {
+    const dpr = Math.min(window.devicePixelRatio || 1, 2);
+    canvas.width  = canvas.clientWidth  * dpr;
+    canvas.height = canvas.clientHeight * dpr;
+    gl.viewport(0, 0, canvas.width, canvas.height);
+    gl.uniform2f(uRes, canvas.width, canvas.height);
+  }
+  resize();
+  window.addEventListener('resize', resize);
+
+  let t = 0;
+  const lerp = (a, b) => a + (b - a) * 0.03;
+  (function animate() {
+    requestAnimationFrame(animate);
+    currentSpeed += (targetSpeed - currentSpeed) * 0.04;
+    t += 0.012 * currentSpeed;
+
+    // Drift palette + pattern towards the current track's mood
+    for (const k of ['soft', 'prim', 'dark']) {
+      for (let i = 0; i < 3; i++) curPal[k][i] = lerp(curPal[k][i], targetPal[k][i]);
+    }
+    curPal.zoom = lerp(curPal.zoom, targetPal.zoom);
+    curPal.warp = lerp(curPal.warp, targetPal.warp);
+
+    gl.uniform1f(uTime, t);
+    gl.uniform1f(uSpeed, currentSpeed);
+    gl.uniform3fv(uSoft, curPal.soft);
+    gl.uniform3fv(uPrim, curPal.prim);
+    gl.uniform3fv(uDark, curPal.dark);
+    gl.uniform1f(uZoom, curPal.zoom);
+    gl.uniform1f(uWarp, curPal.warp);
+    gl.drawArrays(gl.TRIANGLE_STRIP, 0, 4);
+  })();
+}
+
+/* ─── Phase machine: idle → counting (3,2,1) → active (player) ── */
+const readyBtn  = document.getElementById('readyBtn');
+const countNum  = document.getElementById('countNum');
+const player    = document.getElementById('player');
+
+readyBtn.addEventListener('click', () => {
+  document.getElementById('idleGroup').classList.add('gone');
+  targetSpeed = SPEED.counting;
+  let c = 3;
+  showCount(c);
+  const iv = setInterval(() => {
+    c--;
+    if (c <= 0) {
+      clearInterval(iv);
+      countNum.classList.remove('pop');
+      countNum.classList.add('fade');
+      setTimeout(startSession, 400);
+    } else {
+      showCount(c);
+    }
+  }, 1000);
+});
+
+function showCount(n) {
+  countNum.textContent = n;
+  countNum.classList.remove('pop');
+  void countNum.offsetWidth; /* restart the pop animation */
+  countNum.classList.add('pop');
+}
+
+/* ─── Player ─────────────────────────────────────────────── */
+const TRACKS = [
+  { name: 'Velvet Horizon', tag: 'Soul Jazz · Calm',  dur: 204, accent: '#3b21e3', pal: VELVET },
+  { name: 'Slow Bloom',     tag: 'Ambient · Breathe', dur: 186, accent: '#0e8c80',
+    pal: { soft: [0.451, 0.831, 0.776], prim: [0.055, 0.549, 0.502], dark: [0.008, 0.180, 0.161], zoom: 3.4, warp: 0.60 } },
+  { name: 'Night Swim',     tag: 'Lo-fi · Unwind',    dur: 222, accent: '#1d4ed8',
+    pal: { soft: [0.475, 0.616, 0.953], prim: [0.114, 0.306, 0.847], dark: [0.020, 0.059, 0.220], zoom: 5.0, warp: 1.10 } },
+  { name: 'Amber Light',    tag: 'Soul Jazz · Warm',  dur: 198, accent: '#b45309',
+    pal: { soft: [0.953, 0.722, 0.475], prim: [0.788, 0.396, 0.075], dark: [0.271, 0.106, 0.012], zoom: 3.8, warp: 0.72 } },
+];
+let trackIdx = 0;
+let playing = false;
+let elapsed = 0;
+let tickIv = null;
+
+const trackName = document.getElementById('trackName');
+const trackTag  = document.getElementById('trackTag');
+const fill      = document.getElementById('progressFill');
+const playBtn   = document.getElementById('playBtn');
+const iconPlay  = document.getElementById('iconPlay');
+const iconPause = document.getElementById('iconPause');
+
+let sessionStarted = false;
+let hideTimer = null;
+
+// The bar hides after 3s of quiet; tapping the screen brings it back
+function armHide() {
+  clearTimeout(hideTimer);
+  hideTimer = setTimeout(() => player.classList.remove('on'), 3000);
+}
+
+function startSession() {
+  sessionStarted = true;
+  player.classList.add('on');
+  targetSpeed = SPEED.active;
+  playing = true;
+  syncPlayIcon();
+  startTick();
+  armHide();
+}
+
+function loadTrack(i) {
+  trackIdx = (i + TRACKS.length) % TRACKS.length;
+  trackName.textContent = TRACKS[trackIdx].name;
+  trackTag.textContent  = TRACKS[trackIdx].tag;
+  elapsed = 0;
+  fill.style.width = '0%';
+  targetPal = TRACKS[trackIdx].pal;
+  document.documentElement.style.setProperty('--primary', TRACKS[trackIdx].accent);
+}
+
+document.querySelector('.stage').addEventListener('click', () => {
+  if (!sessionStarted) return;
+  player.classList.add('on');
+  armHide();
+});
+
+function startTick() {
+  clearInterval(tickIv);
+  tickIv = setInterval(() => {
+    if (!playing) return;
+    elapsed += 0.25;
+    const d = TRACKS[trackIdx].dur;
+    if (elapsed >= d) { loadTrack(trackIdx + 1); return; }
+    fill.style.width = (elapsed / d * 100) + '%';
+  }, 250);
+}
+
+function syncPlayIcon() {
+  iconPlay.style.display  = playing ? 'none' : 'block';
+  iconPause.style.display = playing ? 'block' : 'none';
+  playBtn.setAttribute('aria-label', playing ? 'Pause' : 'Play');
+}
+
+playBtn.addEventListener('click', () => {
+  playing = !playing;
+  targetSpeed = playing ? SPEED.active : SPEED.paused;
+  syncPlayIcon();
+  armHide();
+});
+document.getElementById('prevBtn').addEventListener('click', () => { loadTrack(trackIdx - 1); armHide(); });
+document.getElementById('nextBtn').addEventListener('click', () => { loadTrack(trackIdx + 1); armHide(); });
+</script>
+</body>
+</html>
