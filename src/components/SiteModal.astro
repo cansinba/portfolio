@@ -1,0 +1,185 @@
+---
+interface Props {
+  id: string;
+  url: string;
+  label?: string;
+  title: string;
+}
+const { id, url, label = new URL(url).host, title } = Astro.props;
+---
+
+<dialog id={id} class="site-modal" aria-labelledby={`${id}-label`}>
+  <div class="frame">
+    <div class="chrome">
+      <span class="dots" aria-hidden="true"><i></i><i></i><i></i></span>
+      <span class="url" id={`${id}-label`}>{label}</span>
+      <div class="actions">
+        <a
+          class="chrome-btn"
+          href={url}
+          target="_blank"
+          rel="noopener noreferrer"
+          aria-label={`Open ${label} in a new tab`}
+        >
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+            <path
+              d="M4 2h8v8M12 2 2 12"
+              stroke="currentColor"
+              stroke-width="1.5"
+              stroke-linecap="round"
+              stroke-linejoin="round"></path>
+          </svg>
+        </a>
+        <button class="chrome-btn" type="button" data-modal-close aria-label="Close preview">
+          <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+            <path
+              d="m2 2 10 10M12 2 2 12"
+              stroke="currentColor"
+              stroke-width="1.5"
+              stroke-linecap="round"></path>
+          </svg>
+        </button>
+      </div>
+    </div>
+    <iframe data-src={url} title={title}></iframe>
+  </div>
+</dialog>
+
+<script>
+  for (const btn of document.querySelectorAll<HTMLElement>("[data-modal-open]")) {
+    btn.addEventListener("click", () => {
+      const dialog = document.getElementById(btn.dataset.modalOpen!) as HTMLDialogElement | null;
+      if (!dialog) return;
+      const iframe = dialog.querySelector("iframe");
+      if (iframe && !iframe.src) iframe.src = iframe.dataset.src ?? "";
+      dialog.showModal();
+    });
+  }
+  for (const dialog of document.querySelectorAll<HTMLDialogElement>("dialog.site-modal")) {
+    dialog.addEventListener("click", (e) => {
+      if (e.target === dialog) dialog.close();
+    });
+    dialog
+      .querySelector("[data-modal-close]")
+      ?.addEventListener("click", () => dialog.close());
+  }
+</script>
+
+<style>
+  .site-modal {
+    /* global.css `* { margin: 0 }` kills the UA's centering — restore it */
+    margin: auto;
+    padding: 0;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--surface);
+    width: min(1100px, calc(100vw - 2 * var(--space-8)));
+    height: min(85dvh, 800px);
+    max-width: none;
+    max-height: none;
+  }
+  .site-modal::backdrop {
+    background: rgb(0 0 0 / 0.55);
+    backdrop-filter: blur(2px);
+  }
+
+  .frame {
+    display: flex;
+    flex-direction: column;
+    height: 100%;
+  }
+
+  .chrome {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    padding: var(--space-2) var(--space-3);
+    border-bottom: 1px solid var(--border);
+    background: var(--bg);
+  }
+  .dots {
+    display: inline-flex;
+    gap: 6px;
+    flex-shrink: 0;
+  }
+  .dots i {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+  }
+  /* Classic traffic-light colors — a skeuomorphic quote, not theme colors */
+  .dots i:nth-child(1) { background: #ff5f57; }
+  .dots i:nth-child(2) { background: #febc2e; }
+  .dots i:nth-child(3) { background: #28c840; }
+
+  .url {
+    margin-inline: auto;
+    font-family: var(--font-mono);
+    font-size: var(--step--1);
+    color: var(--text-muted);
+    border: 1px solid var(--border);
+    border-radius: 999px;
+    padding: 2px var(--space-3);
+    background: var(--surface);
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .actions {
+    display: flex;
+    gap: var(--space-1);
+    flex-shrink: 0;
+  }
+  .chrome-btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border: 0;
+    border-radius: var(--radius-sm);
+    background: none;
+    color: var(--text-muted);
+    cursor: pointer;
+  }
+  .chrome-btn:hover {
+    background: var(--border);
+    color: var(--text);
+  }
+
+  iframe {
+    flex: 1;
+    width: 100%;
+    border: 0;
+    background: var(--surface);
+  }
+
+  @media (max-width: 640px) {
+    .site-modal {
+      width: 100vw;
+      height: 100dvh;
+      margin: 0;
+      border: 0;
+      border-radius: 0;
+    }
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    .site-modal[open] {
+      animation: modal-in 0.18s ease-out;
+    }
+    @keyframes modal-in {
+      from {
+        opacity: 0;
+        transform: scale(0.97);
+      }
+    }
+  }
+</style>
+
+<style is:global>
+  body:has(dialog[open]) {
+    overflow: hidden;
+  }
+</style>
