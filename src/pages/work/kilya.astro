@@ -1,0 +1,290 @@
+---
+import CaseStudy from "../../layouts/CaseStudy.astro";
+import Figure from "../../components/Figure.astro";
+---
+
+<CaseStudy
+  eyebrow="Interactive tool · Pro bono · Oct 2026"
+  title="A planting planner a landowner can use on their phone"
+  outcome="A one-file, phone-first map of a 102-dönüm field: tap an area, pull a corner to resize it, pick a crop, see what it costs. Sent to a non-technical landowner as a WhatsApp attachment."
+  role="Research, UX, UI, build (solo)"
+  timeline="2 days · 78 published versions"
+  tools={["Vanilla HTML/CSS/JS", "SVG", "Python (parametric model)", "Cadastre parcel API", "Satellite imagery"]}
+  liveUrl="/work/kilya/demo.html"
+>
+  <h2>Problem &amp; constraints</h2>
+  <p>
+    A family friend owns a 102-dönüm field (about 10 hectares) on the Gallipoli
+    peninsula and wanted to know what could be planted on it, and roughly what each
+    option would cost. The brief arrived as a hand sketch and two WhatsApp messages:
+    an olive-spacing table and a yield timeline.
+  </p>
+  <p>
+    The person who would use the result is middle-aged, not comfortable with
+    technology, and would open it on a phone. Their one explicit request was that it
+    be <em>"very, very simple"</em>. Everything else followed from that: no jargon,
+    body text never below 17&nbsp;px, 52&nbsp;px buttons, no icon-only controls, and
+    a page that works as a single HTML file attached to a chat message.
+  </p>
+
+  <Figure
+    src="/assets/kilya/sketch.jpg"
+    alt="Hand-drawn sketch of the field: forest at the top, a dirt track down the middle, pecan along the track, olives at the top, a house and barn on the right, sunflower and alfalfa at the bottom."
+    caption="The brief. A hand sketch of the field with the owner's first idea of what goes where."
+  />
+
+  <h2>Process</h2>
+  <p>
+    I started from the real parcel instead of the sketch. The boundary came from the
+    national cadastre service, converted to local metres and rotated so the existing
+    dirt track runs straight up the page. A grid of 1-dönüm squares (the unit every
+    Turkish farmer thinks in) is clipped to that boundary; edge slivers merge into
+    their neighbour so no square is unusably small. Satellite imagery sits underneath,
+    which is how the sketch's "road in the middle" turned out to be real, and how the
+    neighbour's farm at the southern tip was found and excluded from the plan.
+  </p>
+  <p>
+    All geometry, areas and costs are computed in a small Python model and inlined
+    into one HTML file at build time. The page itself has no framework and no build
+    step beyond that, so it opens from a chat attachment on any phone.
+  </p>
+
+  <div class="phones">
+    <figure>
+      <img src="/assets/kilya/default-mobile.webp" alt="The planner as it opens: location line, 'Arsa planı' heading with Undo and Edit buttons, and the gridded field on satellite imagery with the existing olives, pecan and fruit trees labelled." loading="lazy" width="780" height="1688" />
+      <figcaption>Opens on the owner's actual layout. Existing plantings are labelled "mevcut" (existing).</figcaption>
+    </figure>
+    <figure>
+      <img src="/assets/kilya/edit-mobile.webp" alt="Edit mode: a selected pecan field outlined in gold with four corner handles, a hint reading 'pull the corner to grow the area', and a strip at the bottom showing the crop, area and cost." loading="lazy" width="780" height="1688" />
+      <figcaption>Edit mode. A tapped field shows corner handles and a thin strip: crop, area, cost.</figcaption>
+    </figure>
+    <figure>
+      <img src="/assets/kilya/panel-mobile.webp" alt="The crop panel open over the map: 'What shall we plant here?' with six large colour-swatched buttons for olive, pecan, fruit, alfalfa, sunflower and other." loading="lazy" width="780" height="1688" />
+      <figcaption>The crop picker only appears after an explicit "change the crop" tap.</figcaption>
+    </figure>
+  </div>
+
+  <p>
+    Every version was published to a shared link and tried on the owner's own iPhone
+    through WhatsApp. Seventy-eight versions shipped in two days, each one answering a
+    concrete complaint ("my hand selects an area by accident", "I can't tell the
+    cards open", "the scroll stops on the map"). The decisions below are the ones
+    that changed the interaction model.
+  </p>
+
+  <h2>Key decisions</h2>
+
+  <div class="decision">
+    <h3>1 — The map is a picture until you press Edit</h3>
+    <p>
+      Early versions let you drag on the map at any time, which meant a finger that
+      wanted to scroll the page got trapped on the parcel. Now the map is inert by
+      default: the page scrolls, nothing selects. A single "Düzenle" (Edit) button
+      turns the gestures on, scrolls the map to fill the screen, and becomes a gold
+      "Bitti" (Done) that is always in reach.
+    </p>
+    <p class="rejected">
+      <strong>Rejected:</strong> blocking page scroll over the parcel with
+      <code>touch-action: none</code>. It fixed selection and broke reading.
+    </p>
+  </div>
+
+  <div class="decision">
+    <h3>2 — Pull a corner, don't paint squares</h3>
+    <p>
+      The first editing model asked people to tap individual 1-dönüm squares. The
+      owner found it fiddly and "not finished". The replacement: any drag that starts
+      inside a field grows or shrinks that field in whole-dönüm steps from the
+      nearest corner, and adjacent areas with the same crop always merge, even across
+      the road. One gesture, no modes.
+    </p>
+    <p class="rejected">
+      <strong>Rejected:</strong> a two-mode picker ("whole area" / "square by
+      square"). Removed entirely in version 6.
+    </p>
+  </div>
+
+  <div class="decision">
+    <h3>3 — Two steps between a tap and a decision</h3>
+    <p>
+      "My hand picks an area by mistake and a panel full of information jumps up."
+      A tap now only highlights the field and shows a thin strip (crop, area, cost).
+      The crop buttons, undo and the cost breakdown live behind one primary action,
+      "Bitkiyi değiştir" (change the crop). Accidental taps cost nothing.
+    </p>
+    <p class="rejected">
+      <strong>Rejected:</strong> a smaller one-step panel, and long-press to select.
+      Neither is discoverable for this user.
+    </p>
+  </div>
+
+  <div class="decision">
+    <h3>4 — Hints that advance with progress, not with a timer</h3>
+    <p>
+      There are three things to learn: tap an area, pull a corner, zoom with two
+      fingers. Each hint sits in a gold note with its own gesture icon and is
+      dismissed by doing the thing, not by waiting. The zoom hint only appears while
+      the whole map fits on screen, because that is the only moment it is true.
+    </p>
+    <p class="rejected">
+      <strong>Rejected:</strong> rotating tips on a timer, and a permanent "Tap here"
+      bubble on the map. Both were read as noise.
+    </p>
+  </div>
+
+  <div class="decision">
+    <h3>5 — Colour by the real plant, checked for colour vision</h3>
+    <p>
+      Crops are coloured like the crop: dark olive green, pecan-shell brown, fresh
+      alfalfa green, coral for fruit, sunflower yellow. Every adjacent pair was
+      validated at ΔE ≥ 15 (≥ 12 under simulated colour-vision deficiency). The Done
+      state is harvest gold rather than green, because a green button on a green map
+      disappeared.
+    </p>
+    <p class="rejected">
+      <strong>Rejected:</strong> the design tool's first palette suggestion
+      (pink and gold) and a green Done button.
+    </p>
+  </div>
+
+  <div class="decision">
+    <h3>6 — What already grows there is locked, and free</h3>
+    <p>
+      The link always opens on the owner's current layout: the existing olives, pecan
+      and fruit trees are fixed and cannot be edited. Costs are only counted for new
+      dönüm, so the number at the bottom answers the real question: what would the
+      change cost, not what the whole farm is worth.
+    </p>
+    <p class="rejected">
+      <strong>Rejected:</strong> a fully editable proposal plan. It kept resetting
+      the conversation to "but that part is already planted".
+    </p>
+  </div>
+
+  <h3>The whole gesture, end to end</h3>
+  <p>
+    Edit, clear a proposed olive block, draw a new field on bare ground, choose
+    pecan, pull a corner to grow it. The area and cost update live under the finger.
+  </p>
+
+  <div class="phones phones--one">
+    <figure>
+      <img src="/assets/kilya/resize.gif" alt="Animation: pressing Edit, emptying a field, dragging a new rectangle on empty ground, choosing pecan from the crop panel, then pulling a corner handle so the field grows by whole dönüm squares." loading="lazy" width="390" height="844" />
+      <figcaption>Recorded from the demo at phone size.</figcaption>
+    </figure>
+  </div>
+
+  <h3>Try it</h3>
+  <p>
+    The demo below is the real file, in Turkish because that is the client's
+    language. Press <strong>Düzenle</strong>, tap a field, pull a corner.
+    <a href="/work/kilya/demo.html" target="_blank" rel="noopener">Open it full-screen</a>.
+  </p>
+
+  <div class="demo" id="demo">
+    <div class="phone">
+      <iframe src="/work/kilya/demo.html" title="Planting planner, live demo (Turkish)" loading="lazy"></iframe>
+    </div>
+  </div>
+
+  <h2>Outcome &amp; what's next</h2>
+  <p>
+    The owner uses the plan on their phone and has sent back their own layout, which
+    is now the default. Beyond the map, the page carries the olive yield timeline, an
+    olive-oil mill section with a machinery list, and a cost breakdown in two
+    collapsible cards. The prices are rough 2026 estimates and say so.
+  </p>
+  <div class="phones phones--two">
+    <figure>
+      <img src="/assets/kilya/olive-mobile.webp" alt="Olive section: two side-by-side cards comparing normal and dense planting, and a single three-segment timeline bar showing yield in year 2, years 3 to 4 and year 5 onwards." loading="lazy" width="780" height="1688" />
+      <figcaption>Yield over time as one bar, light to dark, instead of three rows of numbers.</figcaption>
+    </figure>
+    <figure>
+      <img src="/assets/kilya/costs-mobile.webp" alt="Costs section: a 'Planting' card expanded to list each crop with its area and cost, existing plantings marked with a dash, and a 'Mill machinery' card below." loading="lazy" width="780" height="1688" />
+      <figcaption>Costs only for new planting. Existing areas show a dash, not a number.</figcaption>
+    </figure>
+  </div>
+  <p>
+    What I would do next: an English build of the demo, a "save as image" button that
+    was removed late (the owner preferred screenshots), and real quotes from the local
+    nursery and irrigation supplier to replace the estimates. A few behaviours (smooth
+    scroll on Edit, two-finger zoom) were verified on the owner's iPhone rather than
+    in a simulator; the rest of the testing ran in a desktop browser at phone width.
+  </p>
+</CaseStudy>
+
+<style>
+  /* Phone screenshots: one, two or three up, scaled to the prose measure */
+  .phones {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--space-4);
+    margin-block: var(--space-8);
+  }
+  .phones--two { grid-template-columns: repeat(2, 1fr); }
+  .phones--one { grid-template-columns: minmax(0, 390px); justify-content: center; }
+  .phones figure { margin: 0; }
+  .phones img {
+    display: block;
+    width: 100%;
+    height: auto;
+    border: 1px solid var(--border);
+    border-radius: 18px;
+    background: var(--surface);
+  }
+  .phones figcaption {
+    margin-top: var(--space-3);
+    font-size: var(--step--1);
+    color: var(--text-muted);
+    line-height: 1.5;
+  }
+  @media (max-width: 48rem) {
+    .phones, .phones--two { grid-template-columns: 1fr; }
+    .phones figure { max-width: 390px; margin-inline: auto; }
+  }
+
+  /* Live demo in a phone frame; the 390 × 844 page is scaled to the frame width */
+  .demo {
+    display: flex;
+    justify-content: center;
+    margin-block: var(--space-8);
+  }
+  .phone {
+    position: relative;
+    width: min(100%, 390px);
+    aspect-ratio: 390 / 844;
+    border: 1px solid var(--border);
+    border-radius: 28px;
+    overflow: hidden;
+    background: var(--surface);
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.18);
+  }
+  .phone iframe {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 390px;
+    height: 844px;
+    border: 0;
+    transform-origin: top left;
+  }
+  code {
+    font-size: 0.9em;
+    padding: 0 0.3em;
+    border: 1px solid var(--border);
+    border-radius: var(--radius-sm);
+    background: var(--surface);
+  }
+</style>
+
+<script>
+  // Scale the 390 px demo iframe to the phone frame's actual width
+  const fit = () => {
+    document.querySelectorAll<HTMLElement>(".phone").forEach((ph) => {
+      const f = ph.querySelector("iframe");
+      if (f) f.style.transform = `scale(${ph.clientWidth / 390})`;
+    });
+  };
+  fit();
+  addEventListener("resize", fit);
+</script>
