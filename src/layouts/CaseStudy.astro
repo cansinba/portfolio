@@ -13,12 +13,13 @@ interface Props {
   liveUrl?: string;
   figmaUrl?: string;
   repoUrl?: string;
+  noindex?: boolean;
 }
-const { eyebrow, title, outcome, role, timeline, tools, liveUrl, figmaUrl, repoUrl } =
+const { eyebrow, title, outcome, role, timeline, tools, liveUrl, figmaUrl, repoUrl, noindex } =
   Astro.props;
 ---
 
-<Base title={`${title} — Case study`} description={outcome}>
+<Base title={`${title} — Case study`} description={outcome} noindex={noindex}>
   <a class="skip" href="#content">Skip to content</a>
 
   <article>
