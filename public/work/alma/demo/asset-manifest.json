@@ -1,0 +1,43 @@
+{
+  "files": {
+    "main.css": "/work/alma/demo/static/css/main.a99a64d6.css",
+    "main.js": "/work/alma/demo/static/js/main.e0ed2fab.js",
+    "static/js/787.cd44fec5.chunk.js": "/work/alma/demo/static/js/787.cd44fec5.chunk.js",
+    "static/media/1920px-homepage.png": "/work/alma/demo/static/media/1920px-homepage.880bbf2ee9286abe2f06.png",
+    "static/media/1920px-notebook.png": "/work/alma/demo/static/media/1920px-notebook.54f4405f32889b9dd168.png",
+    "static/media/1200px-homepage.png": "/work/alma/demo/static/media/1200px-homepage.c8a2a3b47090535fcfdb.png",
+    "static/media/1200px-notebook.png": "/work/alma/demo/static/media/1200px-notebook.0b9ea8057c3cb13d176c.png",
+    "static/media/992px-homepage.png": "/work/alma/demo/static/media/992px-homepage.2617bf1b9f95e8aba907.png",
+    "static/media/992px-notebook.png": "/work/alma/demo/static/media/992px-notebook.bcf0dc984d2e0f42e2e5.png",
+    "static/media/768px-notebook.png": "/work/alma/demo/static/media/768px-notebook.bed77c5995574ebe7e6b.png",
+    "static/media/contact-us-palm-left.png": "/work/alma/demo/static/media/contact-us-palm-left.2df9eb476f98a1b44200.png",
+    "static/media/768px-homepage.png": "/work/alma/demo/static/media/768px-homepage.3c03e4ad840591e7a303.png",
+    "static/media/contact-us-palm-right.png": "/work/alma/demo/static/media/contact-us-palm-right.bf5ddd2c2642ce6a63b0.png",
+    "static/media/600px-notebook.png": "/work/alma/demo/static/media/600px-notebook.35068c30feff0896f2c9.png",
+    "static/media/600px-homepage.png": "/work/alma/demo/static/media/600px-homepage.553be07e9ebcaa25a256.png",
+    "static/media/cart-empty-img-1.png": "/work/alma/demo/static/media/cart-empty-img-1.d399ed6af97d86bc8bea.png",
+    "static/media/shipping-palm-left.png": "/work/alma/demo/static/media/shipping-palm-left.27abf961233ccf8355f6.png",
+    "static/media/shipping-palm-right.png": "/work/alma/demo/static/media/shipping-palm-right.01f6cbc2ca5ba84f81e7.png",
+    "static/media/popup-image.png": "/work/alma/demo/static/media/popup-image.508cc84900ced554f5e6.png",
+    "static/media/cart-empty-img-3.jpg": "/work/alma/demo/static/media/cart-empty-img-3.a319a049e996d2cc97ae.jpg",
+    "static/media/palms-newsletter.png": "/work/alma/demo/static/media/palms-newsletter.1754c6f831c8691258cc.png",
+    "static/media/pay_with_iyzico_colored.png": "/work/alma/demo/static/media/pay_with_iyzico_colored.d9d5d674d8a68a0100ea.png",
+    "static/media/Linotype_Brewery_Medium.ttf": "/work/alma/demo/static/media/Linotype_Brewery_Medium.c69b45f80a764b0112ef.ttf",
+    "static/media/credit-cart-img.png": "/work/alma/demo/static/media/credit-cart-img.185d76a58bf4f064612f.png",
+    "static/media/cart-empty-img-2.png": "/work/alma/demo/static/media/cart-empty-img-2.557be722cb0576616ebc.png",
+    "static/media/Linotype_Brewery_W01_Bold.ttf": "/work/alma/demo/static/media/Linotype_Brewery_W01_Bold.cdb776d9b9952b45ea7d.ttf",
+    "static/media/Linotype_Brewery_W01_Regular.ttf": "/work/alma/demo/static/media/Linotype_Brewery_W01_Regular.cef1214eb780a3cd0056.ttf",
+    "static/media/logo_band_colored@2x.png": "/work/alma/demo/static/media/logo_band_colored@2x.0be97a72cc7008a9ed2b.png",
+    "static/media/logo_band_colored@1X.png": "/work/alma/demo/static/media/logo_band_colored@1X.8182f952008f357969b5.png",
+    "static/media/slogan.png": "/work/alma/demo/static/media/slogan.1f4ffad84b5c6d34e9a4.png",
+    "static/media/logo.svg": "/work/alma/demo/static/media/logo.6ce24c58023cc2f8fd88fe9d219db6c6.svg",
+    "index.html": "/work/alma/demo/index.html",
+    "main.a99a64d6.css.map": "/work/alma/demo/static/css/main.a99a64d6.css.map",
+    "main.e0ed2fab.js.map": "/work/alma/demo/static/js/main.e0ed2fab.js.map",
+    "787.cd44fec5.chunk.js.map": "/work/alma/demo/static/js/787.cd44fec5.chunk.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.a99a64d6.css",
+    "static/js/main.e0ed2fab.js"
+  ]
+}

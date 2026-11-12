@@ -6,8 +6,11 @@ interface Props {
   thumbSrc?: string;
   thumbAlt?: string;
   dialogId: string;
+  /** Optional case-study link shown under the card when the modal previews something else (e.g. a demo) */
+  href?: string;
+  hrefLabel?: string;
 }
-const { title, description, meta, thumbSrc, thumbAlt = "", dialogId } = Astro.props;
+const { title, description, meta, thumbSrc, thumbAlt = "", dialogId, href, hrefLabel = "Read the case study" } = Astro.props;
 ---
 
 <article class="card">
@@ -25,9 +28,35 @@ const { title, description, meta, thumbSrc, thumbAlt = "", dialogId } = Astro.pr
       {meta && <span class="meta">{meta}</span>}
     </span>
   </button>
+  {
+    href && (
+      <a class="more" href={href}>
+        {hrefLabel}
+        <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+          <path d="M2 7h10M8 3l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"></path>
+        </svg>
+      </a>
+    )
+  }
 </article>
 
 <style>
+  .card {
+    display: flex;
+    flex-direction: column;
+  }
+  .more {
+    display: inline-flex;
+    align-items: center;
+    gap: var(--space-2);
+    min-height: 44px;
+    padding-inline: var(--space-1);
+    font-size: var(--step--1);
+    cursor: pointer;
+  }
+  .more:hover {
+    text-decoration-thickness: 2px;
+  }
   .card button {
     display: block;
     width: 100%;

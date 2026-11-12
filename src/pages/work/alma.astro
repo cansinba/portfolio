@@ -1,0 +1,305 @@
+---
+import CaseStudy from "../../layouts/CaseStudy.astro";
+import Figure from "../../components/Figure.astro";
+
+/*
+ * Alma — e-commerce web app built for a client.
+ * Facts come from the coder agent's notes (~/Documents/agent-org/coder/alma-notes.md),
+ * which were read from the private repo's code and git history.
+ * Facts still missing are marked TODO(user) and rendered as visible <mark class="todo">
+ * so they cannot ship unnoticed. Client name, live dates, team/role and outcomes are
+ * deliberately NOT stated until the user confirms them. No link to the app repo
+ * (private, contains secrets) — UD 2026-11-12.
+ */
+---
+
+<CaseStudy
+  eyebrow="E-commerce web app · Client work · 2022–2024"
+  title="Alma: an online shop with a 3D Secure card checkout"
+  outcome="An online shop built for a client: catalogue, bag, accounts and a 3D Secure card checkout on a serverless AWS backend."
+  role="Front end and backend · TODO(user): role, design credit"
+  timeline="Sep 2022 – Jul 2024 in git · TODO(user): live dates"
+  tools={["React (CRA)", "MUI", "Formik + Yup", "AWS Amplify", "Lambda + Express", "MongoDB", "S3 + CloudFront", "iyzico (3D Secure)", "Nodemailer"]}
+  liveUrl="/work/alma/demo/"
+>
+  <h2>Problem &amp; constraints</h2>
+  <p>
+    Alma is an online shop for a small fashion label selling resort wear: cotton robes,
+    gauze shirts, crochet sets. I built it for the client as a custom storefront with its
+    own backoffice.{" "}
+    <mark class="todo">TODO(user): who the client was and why they wanted a custom build, in one sentence. Confirm whether the brand may be named and its photography shown.</mark>
+  </p>
+  <p>
+    Three constraints shaped it. The brand's look came as finished page artwork, and the
+    shop had to keep it. Payments had to work with Turkish cards, which almost always
+    go through 3D Secure. And the shop was run day to day from its own backoffice:
+    adding products, changing prices and shipping, and telling customers their order
+    had shipped.
+  </p>
+  <p>
+    <mark class="todo">TODO(user): my role, and whether anyone else worked on it (visual design, content, AWS account). The git history has a single author.</mark>
+  </p>
+
+  <Figure
+    src="/assets/alma/home-desktop.webp"
+    alt="Alma home page at desktop width: the brand wordmark centred over a slim navigation (shop, collections, notebook, search, account, shopping bag) and a full-width photo of a model in a striped robe on a beach at sunset."
+    caption="The home page from the demo. The layout is the brand's own artwork, one image per breakpoint."
+  />
+
+  <h2>Process</h2>
+  <p>
+    The front end is a React single-page app (Create React App) with MUI for the grid,
+    plain CSS per page with four breakpoints, and Formik with Yup for the checkout
+    forms. The backend is an AWS Amplify project: one Lambda running an Express API
+    behind API Gateway, MongoDB for products, users, carts and payment results, S3 with
+    CloudFront for product images, and Nodemailer for the e-mails. The work ran from
+    September 2022 to July 2024, with most of it between September 2022 and spring 2023.
+  </p>
+  <p>
+    The shop is no longer online. The demo on this page is the same front end, built
+    against a small mock of the API: nine invented products, a stand-in Instagram feed,
+    and a simulated bank page. The UI, CSS and copy are unchanged.
+  </p>
+
+  <div class="shots">
+    <figure>
+      <img src="/assets/alma/shop-desktop.webp" alt="Shop grid at desktop width: Filter on the left, Sort by on the right, four product photos with names and prices in Turkish lira." loading="lazy" width="1440" height="900" />
+      <figcaption>Shop grid with filter (material, colour, type) and sort.</figcaption>
+    </figure>
+    <figure>
+      <img src="/assets/alma/product-sidebar-desktop.webp" alt="Product page with the bag drawer open on the right: a tall photo of the striped robe, and a small bag summary with a Checkout button." loading="lazy" width="1440" height="900" />
+      <figcaption>On desktop, Add to cart opens the bag as a side drawer; on a phone it goes to the bag page.</figcaption>
+    </figure>
+  </div>
+
+  <h2>Key decisions</h2>
+
+  <div class="decision">
+    <h3>1 — 3D Secure inside the shop, not a redirect away from it</h3>
+    <p>
+      Checkout runs in steps: contact and address, shipping, card, then the bank's 3D
+      Secure page. The API starts the payment with iyzico and returns the bank's page,
+      which the shop shows in a frame on its own checkout. When the bank is done, the
+      result page tells the shop through a message whether the payment went through.
+      Only a success message empties the bag; a cancel or a failure sends the customer
+      back to it with everything still there.
+    </p>
+  </div>
+
+  <div class="decision">
+    <h3>2 — Stock changes once, when the payment succeeds</h3>
+    <p>
+      The payment callback completes the payment, lowers the stock for what was bought,
+      stores the result and sends the order e-mail, in that order. A product at zero
+      stock shows a "Sold out" overlay in the grid.
+    </p>
+    <p class="rejected">
+      <strong>Rejected:</strong> updating stock on the server every time an item was
+      added to or removed from a bag. The calls are still in the code, commented out;
+      a bag is not a sale.
+    </p>
+  </div>
+
+  <div class="decision">
+    <h3>3 — Guest checkout without an account</h3>
+    <p>
+      Signing up is optional. A guest's e-mail and address are saved as an unregistered
+      buyer with a temporary token, so the order still has someone to belong to. The
+      form checks while you type whether the e-mail already has an account and offers a
+      sign-in instead.
+    </p>
+  </div>
+
+  <div class="decision">
+    <h3>4 — A backoffice the client runs alone</h3>
+    <p>
+      An admin sign-in opens four tools: upload a product (fields plus a low- and a
+      high-resolution image set, sent straight to S3), edit products and stock, set the
+      financial values (sales tax, shipping price, the discount code), and send the
+      "your order is on its way" e-mail for an order.
+    </p>
+  </div>
+
+  <figure class="wide">
+    <img src="/assets/alma/admin-desktop.webp" alt="Backoffice menu: four black buttons stacked in the centre of the page reading Upload products, Edit products, Edit financial values, and Send order info mail." loading="lazy" width="1440" height="900" />
+    <figcaption>The backoffice menu, reached with an admin sign-in.</figcaption>
+  </figure>
+
+  <div class="decision">
+    <h3>5 — The brand's artwork, kept as artwork</h3>
+    <p>
+      The home and "notebook" pages are the brand's page designs exported as one image
+      per breakpoint, with invisible links placed over the products in the picture.
+      That kept the editorial look exact. The cost is weight: the home page artwork is
+      several megabytes at desktop size.
+    </p>
+  </div>
+
+  <div class="decision">
+    <h3>6 — The shop grid loads four products first</h3>
+    <p>
+      The first request asks for four products so the top of the grid fills quickly;
+      the full list follows and is merged in by id. Product photos come from S3
+      through CloudFront in two sizes: small for the grid, large for the product page.
+    </p>
+  </div>
+
+  <h3>The checkout on a phone</h3>
+  <div class="phones">
+    <figure>
+      <img src="/assets/alma/bag-mobile.webp" alt="Bag on a phone: one striped robe with quantity 2, subtotal, free shipping and total in Turkish lira, the code WELCOME10 applied, and a Checkout button." loading="lazy" width="375" height="812" />
+      <figcaption>Bag with the discount code applied.</figcaption>
+    </figure>
+    <figure>
+      <img src="/assets/alma/checkout-mobile.webp" alt="Checkout step one on a phone: contact e-mail, a Login button for existing accounts, and the shipping address fields filled with demo data." loading="lazy" width="375" height="812" />
+      <figcaption>Step 1, contact and address. Guests do not need an account.</figcaption>
+    </figure>
+    <figure>
+      <img src="/assets/alma/payment-mobile.webp" alt="Payment step on a phone: a note about the iyzico card payment, a billing address choice set to same as shipping, and the card fields." loading="lazy" width="375" height="812" />
+      <figcaption>The card step, before the bank's 3D Secure page.</figcaption>
+    </figure>
+  </div>
+
+  <h3>Try it</h3>
+  <p>
+    The demo runs on mock data and makes no payment. Add something to the bag, use the
+    code <strong>WELCOME10</strong>, and any 16-digit card number takes you to a demo
+    3D Secure page. Any e-mail and password signs you in; an e-mail that starts
+    with <strong>admin</strong> opens the backoffice. <a href="/work/alma/demo/" target="_blank" rel="noopener">Open it full-screen</a>.
+  </p>
+
+  <div class="demo" id="demo">
+    <div class="browser">
+      <iframe src="/work/alma/demo/" title="Alma online shop, clickable demo on mock data" loading="lazy"></iframe>
+    </div>
+  </div>
+
+  <h2>Outcome &amp; what's next</h2>
+  <p>
+    <mark class="todo">TODO(user): how long the shop was live, whether real orders went through it, and anything true about how it was used or what the client said. No numbers until confirmed.</mark>
+  </p>
+  <p>
+    Looking back at the code, a few things I would do differently: check the admin
+    role on the server for every backoffice call, not only in the browser; keep one
+    free-shipping threshold in the financial values instead of two hard-coded ones;
+    configure Amplify once instead of in several components; and serve the page
+    artwork as compressed, responsive images. The checkout flow and the one-stock-update
+    rule I would keep.
+  </p>
+</CaseStudy>
+
+<style>
+  /* Desktop screenshots: two up, stacked on phones */
+  .shots {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: var(--space-4);
+    margin-block: var(--space-8);
+  }
+  .shots figure,
+  .wide,
+  .phones figure {
+    margin: 0;
+  }
+  .wide {
+    margin-block: var(--space-8);
+  }
+  .shots img,
+  .wide img,
+  .phones img {
+    display: block;
+    width: 100%;
+    height: auto;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--surface);
+  }
+  .phones img {
+    border-radius: 18px;
+  }
+  .shots figcaption,
+  .wide figcaption,
+  .phones figcaption {
+    margin-top: var(--space-3);
+    font-size: var(--step--1);
+    color: var(--text-muted);
+    line-height: 1.5;
+  }
+
+  /* Phone screenshots: three up, scaled to the prose measure */
+  .phones {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: var(--space-4);
+    margin-block: var(--space-8);
+  }
+  @media (max-width: 48rem) {
+    .shots,
+    .phones {
+      grid-template-columns: 1fr;
+    }
+    .phones figure {
+      max-width: 375px;
+      margin-inline: auto;
+    }
+  }
+
+  /* Live demo in a browser-shaped frame; a 1280 px wide page scaled to the frame */
+  .demo {
+    margin-block: var(--space-8);
+  }
+  .browser {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 1280 / 800;
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+    background: var(--surface);
+    box-shadow: 0 20px 60px rgba(0, 0, 0, 0.18);
+  }
+  .browser iframe {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 1280px;
+    height: 800px;
+    border: 0;
+    transform-origin: top left;
+  }
+  /* Phone width: show the demo at its own mobile layout instead of a tiny desktop */
+  @media (max-width: 48rem) {
+    .browser {
+      width: min(100%, 390px);
+      margin-inline: auto;
+      aspect-ratio: 390 / 844;
+      border-radius: 28px;
+    }
+    .browser iframe {
+      width: 390px;
+      height: 844px;
+    }
+  }
+
+  /* Missing facts — visible on purpose until the user fills them in */
+  mark.todo {
+    background: none;
+    color: var(--text-muted);
+    font-style: italic;
+    border-bottom: 1px dashed var(--text-muted);
+  }
+</style>
+
+<script>
+  // Scale the demo iframe (1280 desktop / 390 phone) to the frame's actual width
+  const fit = () => {
+    document.querySelectorAll<HTMLElement>(".browser").forEach((frame) => {
+      const f = frame.querySelector("iframe");
+      if (!f) return;
+      const base = matchMedia("(max-width: 48rem)").matches ? 390 : 1280;
+      f.style.transform = `scale(${frame.clientWidth / base})`;
+    });
+  };
+  fit();
+  addEventListener("resize", fit);
+</script>
