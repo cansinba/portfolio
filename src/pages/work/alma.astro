@@ -25,16 +25,13 @@ import Figure from "../../components/Figure.astro";
   <h2>Problem &amp; constraints</h2>
   <p>
     Alma is an online shop for a small fashion label selling resort wear: cotton robes,
-    gauze shirts, crochet sets. I built it for the client as a custom storefront with its
-    own backoffice.{" "}
+    gauze shirts, crochet sets. I built it for the client as a custom storefront.{" "}
     <mark class="todo">TODO(user): who the client was and why they wanted a custom build, in one sentence. Confirm whether the brand may be named and its photography shown.</mark>
   </p>
   <p>
-    Three constraints shaped it. The brand's look came as finished page artwork, and the
-    shop had to keep it. Payments had to work with Turkish cards, which almost always
-    go through 3D Secure. And the shop was run day to day from its own backoffice:
-    adding products, changing prices and shipping, and telling customers their order
-    had shipped.
+    Two constraints shaped it. The brand's look came as finished page artwork, and the
+    shop had to keep it. And payments had to work with Turkish cards, which almost
+    always go through 3D Secure.
   </p>
   <p>
     <mark class="todo">TODO(user): my role, and whether anyone else worked on it (visual design, content, AWS account). The git history has a single author.</mark>
@@ -111,22 +108,7 @@ import Figure from "../../components/Figure.astro";
   </div>
 
   <div class="decision">
-    <h3>4 — A backoffice the client runs alone</h3>
-    <p>
-      An admin sign-in opens four tools: upload a product (fields plus a low- and a
-      high-resolution image set, sent straight to S3), edit products and stock, set the
-      financial values (sales tax, shipping price, the discount code), and send the
-      "your order is on its way" e-mail for an order.
-    </p>
-  </div>
-
-  <figure class="wide">
-    <img src="/assets/alma/admin-desktop.webp" alt="Backoffice menu: four black buttons stacked in the centre of the page reading Upload products, Edit products, Edit financial values, and Send order info mail." loading="lazy" width="1440" height="900" />
-    <figcaption>The backoffice menu, reached with an admin sign-in.</figcaption>
-  </figure>
-
-  <div class="decision">
-    <h3>5 — The brand's artwork, kept as artwork</h3>
+    <h3>4 — The brand's artwork, kept as artwork</h3>
     <p>
       The home and "notebook" pages are the brand's page designs exported as one image
       per breakpoint, with invisible links placed over the products in the picture.
@@ -136,7 +118,7 @@ import Figure from "../../components/Figure.astro";
   </div>
 
   <div class="decision">
-    <h3>6 — The shop grid loads four products first</h3>
+    <h3>5 — The shop grid loads four products first</h3>
     <p>
       The first request asks for four products so the top of the grid fills quickly;
       the full list follows and is merged in by id. Product photos come from S3
@@ -164,8 +146,7 @@ import Figure from "../../components/Figure.astro";
   <p>
     The demo runs on mock data and makes no payment. Add something to the bag, use the
     code <strong>WELCOME10</strong>, and any 16-digit card number takes you to a demo
-    3D Secure page. Any e-mail and password signs you in; an e-mail that starts
-    with <strong>admin</strong> opens the backoffice. <a href="/work/alma/demo/" target="_blank" rel="noopener">Open it full-screen</a>.
+    3D Secure page. Any e-mail and password signs you in. <a href="/work/alma/demo/" target="_blank" rel="noopener">Open it full-screen</a>.
   </p>
 
   <div class="demo" id="demo">
@@ -179,8 +160,7 @@ import Figure from "../../components/Figure.astro";
     <mark class="todo">TODO(user): how long the shop was live, whether real orders went through it, and anything true about how it was used or what the client said. No numbers until confirmed.</mark>
   </p>
   <p>
-    Looking back at the code, a few things I would do differently: check the admin
-    role on the server for every backoffice call, not only in the browser; keep one
+    Looking back at the code, a few things I would do differently: keep one
     free-shipping threshold in the financial values instead of two hard-coded ones;
     configure Amplify once instead of in several components; and serve the page
     artwork as compressed, responsive images. The checkout flow and the one-stock-update
